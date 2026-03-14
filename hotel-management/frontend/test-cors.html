@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS Test - Hotel Management API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        button {
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background: #0284c7;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .test-section:last-child {
+            border-bottom: none;
+        }
+        h2 {
+            color: #374151;
+            margin-bottom: 15px;
+        }
+        .credentials {
+            background: #f9fafb;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 CORS Test Tool</h1>
+        <p class="subtitle">Test your Hotel Management API CORS configuration</p>
+
+        <!-- Test 1: Simple GET Request -->
+        <div class="test-section">
+            <h2>Test 1: Simple GET Request</h2>
+            <p>Tests if basic GET requests work (should not trigger preflight)</p>
+            <button onclick="testSimpleGet()">Test GET /api/v1/rooms</button>
+            <div id="result1"></div>
+        </div>
+
+        <!-- Test 2: POST Login Request -->
+        <div class="test-section">
+            <h2>Test 2: POST Login Request</h2>
+            <p>Tests if POST requests with JSON body work (triggers preflight)</p>
+            <div class="credentials">
+                <strong>Test Credentials:</strong><br>
+                Username: admin001<br>
+                Password: admin123
+            </div>
+            <button onclick="testLogin()">Test POST /api/v1/auth/login</button>
+            <div id="result2"></div>
+        </div>
+
+        <!-- Test 3: Preflight Request -->
+        <div class="test-section">
+            <h2>Test 3: OPTIONS Preflight Request</h2>
+            <p>Tests if preflight requests are handled correctly</p>
+            <button onclick="testPreflight()">Test OPTIONS /api/v1/auth/login</button>
+            <div id="result3"></div>
+        </div>
+
+        <!-- Test 4: With Custom Headers -->
+        <div class="test-section">
+            <h2>Test 4: Request with Custom Headers</h2>
+            <p>Tests if custom headers are allowed</p>
+            <button onclick="testCustomHeaders()">Test with Authorization Header</button>
+            <div id="result4"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api/v1';
+
+        function showResult(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.textContent = message;
+        }
+
+        async function testSimpleGet() {
+            showResult('result1', 'Testing...', 'info');
+            try {
+                const response = await fetch(`${API_BASE_URL}/rooms`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('result1', 
+                        `✅ SUCCESS!\n\n` +
+                        `Status: ${response.status}\n` +
+                        `CORS Headers:\n` +
+                        `- Access-Control-Allow-Origin: ${response.headers.get('Access-Control-Allow-Origin')}\n` +
+                        `- Access-Control-Allow-Credentials: ${response.headers.get('Access-Control-Allow-Credentials')}\n\n` +
+                        `Response: ${JSON.stringify(data, null, 2)}`,
+                        'success'
+                    );
+                } else {
+                    showResult('result1', 
+                        `⚠️ Request completed but returned error status\n\n` +
+                        `Status: ${response.status}\n` +
+                        `Response: ${JSON.stringify(data, null, 2)}`,
+                        'error'
+                    );
+                }
+            } catch (error) {
+                showResult('result1', 
+                    `❌ CORS ERROR!\n\n` +
+                    `Error: ${error.message}\n\n` +
+                    `This means CORS is not configured correctly or backend is not running.\n` +
+                    `Make sure:\n` +
+                    `1. Backend is running on http://localhost:8080\n` +
+                    `2. CORS configuration is applied\n` +
+                    `3. Browser cache is cleared`,
+                    'error'
+                );
+            }
+        }
+
+        async function testLogin() {
+            showResult('result2', 'Testing...', 'info');
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin001',
+                        password: 'admin123'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showResult('result2', 
+                        `✅ LOGIN SUCCESS!\n\n` +
+                        `Status: ${response.status}\n` +
+                        `Message: ${data.message}\n` +
+                        `User: ${data.data?.username || 'N/A'}\n` +
+                        `Role: ${data.data?.role || 'N/A'}\n` +
+                        `Token: ${data.data?.token ? 'Received' : 'Not provided'}\n\n` +
+                        `CORS is working correctly! ✨`,
+                        'success'
+                    );
+                } else {
+                    showResult('result2', 
+                        `⚠️ Request completed but login failed\n\n` +
+                        `Status: ${response.status}\n` +
+                        `Response: ${JSON.stringify(data, null, 2)}\n\n` +
+                        `Note: CORS is working, but credentials may be wrong or user doesn't exist.`,
+                        'error'
+                    );
+                }
+            } catch (error) {
+                showResult('result2', 
+                    `❌ CORS ERROR!\n\n` +
+                    `Error: ${error.message}\n\n` +
+                    `POST requests are being blocked by CORS.\n` +
+                    `Check that preflight OPTIONS requests are allowed.`,
+                    'error'
+                );
+            }
+        }
+
+        async function testPreflight() {
+            showResult('result3', 'Testing...', 'info');
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'Content-Type'
+                    }
+                });
+
+                showResult('result3', 
+                    `✅ PREFLIGHT SUCCESS!\n\n` +
+                    `Status: ${response.status}\n` +
+                    `Allowed Methods: ${response.headers.get('Access-Control-Allow-Methods')}\n` +
+                    `Allowed Headers: ${response.headers.get('Access-Control-Allow-Headers')}\n` +
+                    `Max Age: ${response.headers.get('Access-Control-Max-Age')}\n\n` +
+                    `Preflight requests are handled correctly! ✨`,
+                    'success'
+                );
+            } catch (error) {
+                showResult('result3', 
+                    `❌ PREFLIGHT FAILED!\n\n` +
+                    `Error: ${error.message}\n\n` +
+                    `OPTIONS requests are not being handled.\n` +
+                    `This will block all POST/PUT/DELETE requests.`,
+                    'error'
+                );
+            }
+        }
+
+        async function testCustomHeaders() {
+            showResult('result4', 'Testing...', 'info');
+            try {
+                const response = await fetch(`${API_BASE_URL}/rooms`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer test-token-123'
+                    }
+                });
+
+                const data = await response.json();
+                
+                showResult('result4', 
+                    `✅ CUSTOM HEADERS ALLOWED!\n\n` +
+                    `Status: ${response.status}\n` +
+                    `Authorization header was accepted.\n\n` +
+                    `Response: ${JSON.stringify(data, null, 2)}`,
+                    'success'
+                );
+            } catch (error) {
+                showResult('result4', 
+                    `❌ CUSTOM HEADERS BLOCKED!\n\n` +
+                    `Error: ${error.message}\n\n` +
+                    `Custom headers like Authorization are being blocked.\n` +
+                    `Check allowedHeaders configuration.`,
+                    'error'
+                );
+            }
+        }
+
+        // Show initial instructions
+        window.onload = function() {
+            console.log('CORS Test Tool loaded');
+            console.log('Backend URL:', API_BASE_URL);
+            console.log('Make sure your backend is running on http://localhost:8080');
+        };
+    </script>
+</body>
+</html>
