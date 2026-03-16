@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import authApi from '../api/authApi';
 
 // Mock data
 const mockRooms = [
@@ -80,6 +82,14 @@ const mockReviews = [
 ];
 
 const HomePage = () => {
+  const navigate = useNavigate();
+  const user = authApi.getCurrentUser();
+
+  const handleLogout = () => {
+    authApi.logout();
+    navigate('/login');
+  };
+
   const [searchForm, setSearchForm] = useState({
     checkIn: '',
     checkOut: '',
@@ -125,9 +135,20 @@ const HomePage = () => {
             <a href="#reviews" className="text-gray-700 hover:text-blue-600 transition">Đánh Giá</a>
             <a href="#contact" className="text-gray-700 hover:text-blue-600 transition">Liên Hệ</a>
           </nav>
-          <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
-            Đặt Phòng
-          </button>
+          <div className="flex items-center space-x-3">
+            <span className="hidden md:block text-sm text-gray-600">
+              Xin chào, <span className="font-semibold text-gray-900">{user?.fullName || user?.username}</span>
+            </span>
+            <button
+              onClick={handleLogout}
+              className="flex items-center space-x-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition text-sm font-medium"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span>Đăng Xuất</span>
+            </button>
+          </div>
         </div>
       </header>
 
