@@ -30,6 +30,8 @@ public interface RoomService {
 
     List<RoomDTO> searchRooms(String keyword);
 
+    List<RoomDTO> filterRooms(RoomStatus status, Integer roomTypeId, String keyword);
+
     long countRoomsByStatus(RoomStatus status);
 
     boolean existsByRoomNumber(String roomNumber);

@@ -64,83 +64,21 @@ public class InvoiceController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<?>> getAllInvoices() {
+    public ResponseEntity<ApiResponse<?>> getInvoices(
+            @RequestParam(required = false) Integer userId,
+            @RequestParam(required = false) Integer bookingId,
+            @RequestParam(required = false) InvoiceStatus status,
+            @RequestParam(required = false) PaymentMethod paymentMethod,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
         try {
-            List<InvoiceDTO> invoices = invoiceService.getAllInvoices();
-            return ResponseEntity.ok(ApiResponse.success("Invoices retrieved successfully", invoices));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve invoices: " + e.getMessage()));
-        }
-    }
-
-    @GetMapping("/booking/{bookingId}")
-    public ResponseEntity<ApiResponse<?>> getInvoiceByBookingId(@PathVariable Integer bookingId) {
-        try {
-            var invoice = invoiceService.getInvoiceByBookingId(bookingId);
-
-            if (invoice.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(ApiResponse.error("Invoice not found for this booking"));
+            List<InvoiceDTO> invoices;
+            if (userId != null || bookingId != null || status != null || paymentMethod != null
+                    || startDate != null || endDate != null) {
+                invoices = invoiceService.filterInvoices(userId, bookingId, status, paymentMethod, startDate, endDate);
+            } else {
+                invoices = invoiceService.getAllInvoices();
             }
-
-            return ResponseEntity.ok(ApiResponse.success("Invoice retrieved successfully", invoice.get()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve invoice: " + e.getMessage()));
-        }
-    }
-
-    @GetMapping("/status/{status}")
-    public ResponseEntity<ApiResponse<?>> getInvoicesByStatus(@PathVariable InvoiceStatus status) {
-        try {
-            List<InvoiceDTO> invoices = invoiceService.getInvoicesByStatus(status);
-            return ResponseEntity.ok(ApiResponse.success("Invoices retrieved successfully", invoices));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve invoices: " + e.getMessage()));
-        }
-    }
-
-    @GetMapping("/payment-method/{paymentMethod}")
-    public ResponseEntity<ApiResponse<?>> getInvoicesByPaymentMethod(@PathVariable PaymentMethod paymentMethod) {
-        try {
-            List<InvoiceDTO> invoices = invoiceService.getInvoicesByPaymentMethod(paymentMethod);
-            return ResponseEntity.ok(ApiResponse.success("Invoices retrieved successfully", invoices));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve invoices: " + e.getMessage()));
-        }
-    }
-
-    @GetMapping("/date-range")
-    public ResponseEntity<ApiResponse<?>> getInvoicesByDateRange(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-        try {
-            List<InvoiceDTO> invoices = invoiceService.getInvoicesByDateRange(startDate, endDate);
-            return ResponseEntity.ok(ApiResponse.success("Invoices retrieved successfully", invoices));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve invoices: " + e.getMessage()));
-        }
-    }
-
-    @GetMapping("/unpaid")
-    public ResponseEntity<ApiResponse<?>> getUnpaidInvoices() {
-        try {
-            List<InvoiceDTO> invoices = invoiceService.getUnpaidInvoices();
-            return ResponseEntity.ok(ApiResponse.success("Unpaid invoices retrieved successfully", invoices));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve unpaid invoices: " + e.getMessage()));
-        }
-    }
-
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<ApiResponse<?>> getInvoicesByUserId(@PathVariable Integer userId) {
-        try {
-            List<InvoiceDTO> invoices = invoiceService.getInvoicesByUserId(userId);
             return ResponseEntity.ok(ApiResponse.success("Invoices retrieved successfully", invoices));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

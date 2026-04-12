@@ -1,237 +1,118 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import authApi from '../../api/authApi';
 
-const LoginPage = () => {
+export default function LoginPage() {
   const navigate = useNavigate();
-  
-  const [formData, setFormData] = useState({
-    username: '',
-    password: ''
-  });
-  
+  const [form, setForm] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [validationErrors, setValidationErrors] = useState({});
+  const [showPw, setShowPw] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    
-    if (validationErrors[name]) {
-      setValidationErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
-    
-    if (error) {
-      setError('');
-    }
-  };
+  const onChange = (e) => { setForm(p => ({ ...p, [e.target.name]: e.target.value })); setError(''); };
 
-  const validateForm = () => {
-    const errors = {};
-    
-    if (!formData.username.trim()) {
-      errors.username = 'Tên đăng nhập là bắt buộc';
-    }
-    
-    if (!formData.password) {
-      errors.password = 'Mật khẩu là bắt buộc';
-    }
-    
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleSubmit = async (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-    
+    if (!form.username || !form.password) { setError('Vui lòng nhập đầy đủ thông tin'); return; }
     setLoading(true);
-    setError('');
-    
-    try {
-      const response = await authApi.login({
-        username: formData.username,
-        password: formData.password
-      });
-      
-      if (response.success) {
-        if (response.data?.token) {
-          localStorage.setItem('token', response.data.token);
-        }
-        
-        if (response.data) {
-          const userInfo = {
-            userId: response.data.userId,
-            username: response.data.username,
-            fullName: response.data.fullName,
-            email: response.data.email,
-            role: response.data.role
-          };
-          localStorage.setItem('user', JSON.stringify(userInfo));
-        }
-        
-        const role = response.data?.role;
-        if (role === 'ADMIN') {
-          navigate('/dashboard');
-        } else if (role === 'RECEPTIONIST') {
-          navigate('/receptionist');
-        } else if (role === 'CUSTOMER') {
-          navigate('/home');
-        } else {
-          navigate('/dashboard');
-        }
-      } else {
-        setError(response.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
-      }
-    } catch (err) {
-      setError(err || 'Đăng nhập thất bại. Vui lòng kiểm tra thông tin đăng nhập.');
-    } finally {
-      setLoading(false);
+    const res = await authApi.login(form);
+    setLoading(false);
+    if (res.success) {
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data));
+      const role = res.data.role;
+      if (role === 'ADMIN') navigate('/dashboard');
+      else if (role === 'RECEPTIONIST') navigate('/receptionist');
+      else navigate('/home'); // CUSTOMER, GUEST
+    } else {
+      setError(res.message);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-              <span className="text-3xl">🏨</span>
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Luxury Hotel
-            </h1>
-            <p className="text-gray-600">
-              Đăng nhập để truy cập hệ thống
-            </p>
-          </div>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden"
+      style={{ background: 'radial-gradient(ellipse at 60% 40%, #3324BC 0%, #1e1571 60%, #0f0a3d 100%)' }}>
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary-400 opacity-20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-primary-600 opacity-10 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Error Message */}
+      <div className="relative z-10 w-full max-w-md mx-4">
+        {/* Brand */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-12 bg-primary-500 rounded-xl mb-4">
+            <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+          </div>
+          <h1 className="text-3xl font-bold text-white">Etheric Hotel</h1>
+          <p className="text-primary-200 text-sm mt-1">Hệ thống quản lý khách sạn thông minh</p>
+        </div>
+
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-2xl p-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Đăng nhập</h2>
+
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <div className="flex items-center">
-                <span className="text-red-600 mr-2">⚠️</span>
-                <p className="text-sm text-red-800">{error}</p>
-              </div>
+            <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+              <svg className="w-4 h-4 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+              </svg>
+              <p className="text-sm text-red-700">{error}</p>
             </div>
           )}
 
-          {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Username Field */}
+          <form onSubmit={onSubmit} className="space-y-4">
             <div>
-              <label 
-                htmlFor="username" 
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Tên Đăng Nhập
-              </label>
-              <input
-                type="text"
-                id="username"
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                  validationErrors.username 
-                    ? 'border-red-300 bg-red-50' 
-                    : 'border-gray-300'
-                }`}
-                placeholder="Nhập tên đăng nhập"
-                disabled={loading}
-              />
-              {validationErrors.username && (
-                <p className="mt-1 text-sm text-red-600">
-                  {validationErrors.username}
-                </p>
-              )}
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Tên đăng nhập</label>
+              <input name="username" value={form.username} onChange={onChange}
+                placeholder="Nhập tên đăng nhập" className="input-field" disabled={loading} autoFocus />
             </div>
-
-            {/* Password Field */}
             <div>
-              <label 
-                htmlFor="password" 
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Mật Khẩu
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                  validationErrors.password 
-                    ? 'border-red-300 bg-red-50' 
-                    : 'border-gray-300'
-                }`}
-                placeholder="Nhập mật khẩu"
-                disabled={loading}
-              />
-              {validationErrors.password && (
-                <p className="mt-1 text-sm text-red-600">
-                  {validationErrors.password}
-                </p>
-              )}
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Mật khẩu</label>
+              <div className="relative">
+                <input name="password" type={showPw ? 'text' : 'password'} value={form.password} onChange={onChange}
+                  placeholder="Nhập mật khẩu" className="input-field pr-10" disabled={loading} />
+                <button type="button" onClick={() => setShowPw(p => !p)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  {showPw
+                    ? <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                    : <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  }
+                </button>
+              </div>
             </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-all duration-200 ${
-                loading
-                  ? 'bg-blue-400 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700 active:scale-95'
-              }`}
-            >
-              {loading ? 'Đang đăng nhập...' : 'Đăng Nhập'}
+            <div className="flex justify-end">
+              <Link to="/forgot-password" className="text-sm text-primary-500 hover:text-primary-600">Quên mật khẩu?</Link>
+            </div>
+            <button type="submit" disabled={loading}
+              className="w-full py-3 rounded-lg font-semibold text-white transition-all"
+              style={{ background: loading ? '#aba7ed' : 'linear-gradient(135deg, #3324BC, #574fdb)' }}>
+              {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </button>
           </form>
 
-          {/* Demo Accounts */}
-          <div className="mt-8 pt-8 border-t border-gray-200">
-            <p className="text-sm font-semibold text-gray-700 mb-4 text-center">
-              📝 Tài Khoản Demo
-            </p>
-            <div className="space-y-3">
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <p className="font-semibold text-blue-900 text-sm">👨‍💼 Admin</p>
-                <p className="text-xs text-blue-700">admin001 / admin123</p>
-              </div>
-              <div className="bg-amber-50 p-3 rounded-lg">
-                <p className="font-semibold text-amber-900 text-sm">👩‍💼 Lễ Tân</p>
-                <p className="text-xs text-amber-700">receptionist001 / receptionist123</p>
-              </div>
-              <div className="bg-green-50 p-3 rounded-lg">
-                <p className="font-semibold text-green-900 text-sm">👤 Khách Hàng</p>
-                <p className="text-xs text-green-700">customer001 / customer123</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            © 2024 Luxury Hotel. Bảo lưu mọi quyền.
+          <p className="text-center text-sm text-gray-500 mt-5">
+            Chưa có tài khoản?{' '}
+            <Link to="/register" className="text-primary-500 font-medium hover:text-primary-600">Đăng ký ngay</Link>
           </p>
         </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          {[
+            { label: 'Admin', user: 'admin1', color: 'bg-primary-500/20 text-primary-200' },
+            { label: 'Lễ tân', user: 'recep1', color: 'bg-white/15 text-white' },
+            { label: 'Khách', user: 'user1', color: 'bg-white/10 text-primary-200' },
+          ].map(a => (
+            <button key={a.user} onClick={() => setForm({ username: a.user, password: a.user })}
+              className={`rounded-xl p-2.5 text-center transition-colors hover:opacity-80 ${a.color}`}>
+              <p className="text-xs font-semibold">{a.label}</p>
+              <p className="text-xs opacity-75 mt-0.5">{a.user}/{a.user}</p>
+            </button>
+          ))}
+        </div>
+
+        <p className="text-center text-primary-300 text-xs mt-4">© 2024 Etheric Hotel Management. All rights reserved.</p>
       </div>
     </div>
   );
-};
+}
 
-export default LoginPage;

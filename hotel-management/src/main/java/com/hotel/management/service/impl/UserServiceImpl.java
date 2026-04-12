@@ -121,6 +121,14 @@ public class UserServiceImpl implements UserService {
         return userRepository.existsByEmail(email);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public boolean verifyPassword(String username, String rawPassword) {
+        return userRepository.findByUsername(username)
+                .map(user -> rawPassword.equals(user.getPassword()))
+                .orElse(false);
+    }
+
     private UserDTO mapToDTO(User user) {
         return UserDTO.builder()
                 .id(user.getId())

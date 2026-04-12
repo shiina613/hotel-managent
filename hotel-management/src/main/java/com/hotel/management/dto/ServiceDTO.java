@@ -1,6 +1,5 @@
 package com.hotel.management.dto;
 
-import com.hotel.management.enums.ServiceUnit;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -15,7 +14,7 @@ public class ServiceDTO {
     private Integer id;
     private String name;
     private Integer price;
-    private ServiceUnit unit;
+    private String unit;
     private Boolean isActive;
     private LocalDateTime createAt;
     private LocalDateTime updateAt;

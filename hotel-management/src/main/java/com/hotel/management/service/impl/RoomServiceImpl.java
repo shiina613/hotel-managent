@@ -36,6 +36,7 @@ public class RoomServiceImpl implements RoomService {
                 .capacity(roomDTO.getCapacity())
                 .imgFolder(roomDTO.getImgFolder())
                 .price(roomDTO.getPrice())
+                .hourlyPrice(roomDTO.getHourlyPrice())
                 .build();
 
         Room savedRoom = roomRepository.save(room);
@@ -58,6 +59,7 @@ public class RoomServiceImpl implements RoomService {
         room.setCapacity(roomDTO.getCapacity());
         room.setImgFolder(roomDTO.getImgFolder());
         room.setPrice(roomDTO.getPrice());
+        room.setHourlyPrice(roomDTO.getHourlyPrice());
 
         Room updatedRoom = roomRepository.save(room);
         return mapToDTO(updatedRoom);
@@ -132,6 +134,14 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<RoomDTO> filterRooms(RoomStatus status, Integer roomTypeId, String keyword) {
+        return roomRepository.filterRooms(status, roomTypeId, keyword).stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public long countRoomsByStatus(RoomStatus status) {
         return roomRepository.countByStatus(status);
     }
@@ -153,6 +163,7 @@ public class RoomServiceImpl implements RoomService {
                 .capacity(room.getCapacity())
                 .imgFolder(room.getImgFolder())
                 .price(room.getPrice())
+                .hourlyPrice(room.getHourlyPrice())
                 .createAt(room.getCreateAt())
                 .updateAt(room.getUpdateAt())
                 .build();

@@ -31,6 +31,9 @@ public interface BookingService {
 
     List<BookingDTO> getCurrentBookings();
 
+    List<BookingDTO> filterBookings(Integer userId, Integer roomId, BookingStatus status,
+                                    LocalDateTime startDate, LocalDateTime endDate);
+
     long countBookingsByStatus(BookingStatus status);
 
     Integer getTotalRevenueByStatus(BookingStatus status);

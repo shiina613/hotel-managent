@@ -135,6 +135,15 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<InvoiceDTO> filterInvoices(Integer userId, Integer bookingId, InvoiceStatus status,
+                                           PaymentMethod payMethod, LocalDateTime startDate, LocalDateTime endDate) {
+        return invoiceRepository.filterInvoices(userId, bookingId, status, payMethod, startDate, endDate).stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public long countInvoicesByStatus(InvoiceStatus status) {
         return invoiceRepository.countByStatus(status);
     }

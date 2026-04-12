@@ -32,6 +32,9 @@ public interface InvoiceService {
 
     List<InvoiceDTO> getInvoicesByUserId(Integer userId);
 
+    List<InvoiceDTO> filterInvoices(Integer userId, Integer bookingId, InvoiceStatus status,
+                                    PaymentMethod payMethod, LocalDateTime startDate, LocalDateTime endDate);
+
     long countInvoicesByStatus(InvoiceStatus status);
 
     Integer getTotalRevenueByStatus(InvoiceStatus status);

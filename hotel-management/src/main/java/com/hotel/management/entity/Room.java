@@ -40,11 +40,14 @@ public class Room {
     @Column(nullable = false)
     private Integer capacity;
 
-    @Column(length = 255)
+    @Column(columnDefinition = "TEXT")
     private String imgFolder;
 
     @Column(nullable = false)
     private Integer price;
+
+    @Column
+    private Integer hourlyPrice;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

@@ -24,6 +24,18 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     @Query("SELECT b FROM Booking b WHERE b.checkInAt >= :startDate AND b.checkOutAt <= :endDate")
     List<Booking> findBookingsByDateRange(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
+    @Query("SELECT b FROM Booking b WHERE " +
+           "(:userId IS NULL OR b.user.id = :userId) AND " +
+           "(:roomId IS NULL OR b.room.id = :roomId) AND " +
+           "(:status IS NULL OR b.status = :status) AND " +
+           "(:startDate IS NULL OR b.checkInAt >= :startDate) AND " +
+           "(:endDate IS NULL OR b.checkOutAt <= :endDate)")
+    List<Booking> filterBookings(@Param("userId") Integer userId,
+                                 @Param("roomId") Integer roomId,
+                                 @Param("status") BookingStatus status,
+                                 @Param("startDate") LocalDateTime startDate,
+                                 @Param("endDate") LocalDateTime endDate);
+
     @Query("SELECT b FROM Booking b WHERE b.room.id = :roomId AND b.checkInAt >= :startDate AND b.checkOutAt <= :endDate")
     List<Booking> findBookingsByRoomAndDateRange(@Param("roomId") Integer roomId, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 

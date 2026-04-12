@@ -26,6 +26,20 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Integer> {
     @Query("SELECT i FROM Invoice i WHERE i.createAt >= :startDate AND i.createAt <= :endDate")
     List<Invoice> findInvoicesByDateRange(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
+    @Query("SELECT i FROM Invoice i WHERE " +
+           "(:userId IS NULL OR i.booking.user.id = :userId) AND " +
+           "(:bookingId IS NULL OR i.booking.id = :bookingId) AND " +
+           "(:status IS NULL OR i.status = :status) AND " +
+           "(:payMethod IS NULL OR i.payMethod = :payMethod) AND " +
+           "(:startDate IS NULL OR i.createAt >= :startDate) AND " +
+           "(:endDate IS NULL OR i.createAt <= :endDate)")
+    List<Invoice> filterInvoices(@Param("userId") Integer userId,
+                                 @Param("bookingId") Integer bookingId,
+                                 @Param("status") InvoiceStatus status,
+                                 @Param("payMethod") PaymentMethod payMethod,
+                                 @Param("startDate") LocalDateTime startDate,
+                                 @Param("endDate") LocalDateTime endDate);
+
     @Query("SELECT i FROM Invoice i WHERE i.status = :status ORDER BY i.createAt DESC")
     List<Invoice> findRecentInvoices(@Param("status") InvoiceStatus status);
 

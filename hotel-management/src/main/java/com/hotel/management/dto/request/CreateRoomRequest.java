@@ -31,10 +31,13 @@ public class CreateRoomRequest {
     @Min(value = 1, message = "Capacity must be at least 1")
     private Integer capacity;
 
-    @Size(max = 255, message = "Image folder must not exceed 255 characters")
+    @Size(max = 2000, message = "Image folder must not exceed 2000 characters")
     private String imgFolder;
 
     @NotNull(message = "Price is required")
     @Min(value = 0, message = "Price must be greater than or equal to 0")
     private Integer price;
+
+    @Min(value = 0, message = "Hourly price must be greater than or equal to 0")
+    private Integer hourlyPrice;
 }

@@ -1,30 +1,23 @@
 import { Navigate } from 'react-router-dom';
+import authApi from '../api/authApi';
 
-const getToken = () => localStorage.getItem('token');
-const getUser = () => {
-  try {
-    const u = localStorage.getItem('user');
-    return u ? JSON.parse(u) : null;
-  } catch {
-    return null;
-  }
+const ROLE_HOME = {
+  ADMIN: '/dashboard',
+  RECEPTIONIST: '/receptionist',
+  CUSTOMER: '/home',
 };
 
-const ProtectedRoute = ({ children, requiredRole = null }) => {
-  const token = getToken();
-  const user = getUser();
+// requiredRole: string | string[]
+const ProtectedRoute = ({ children, requiredRole }) => {
+  const user = authApi.getCurrentUser();
+  const token = localStorage.getItem('token');
 
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
+  if (!token || !user) return <Navigate to="/login" replace />;
 
-  if (requiredRole && user?.role !== requiredRole) {
-    // Redirect về đúng trang của role hiện tại
-    switch (user?.role) {
-      case 'ADMIN':        return <Navigate to="/dashboard" replace />;
-      case 'RECEPTIONIST': return <Navigate to="/receptionist" replace />;
-      case 'CUSTOMER':     return <Navigate to="/home" replace />;
-      default:             return <Navigate to="/login" replace />;
+  if (requiredRole) {
+    const allowed = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+    if (!allowed.includes(user.role)) {
+      return <Navigate to={ROLE_HOME[user.role] || '/login'} replace />;
     }
   }
 

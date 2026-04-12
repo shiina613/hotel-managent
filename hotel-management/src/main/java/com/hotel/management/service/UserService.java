@@ -32,4 +32,6 @@ public interface UserService {
     boolean existsByUsername(String username);
 
     boolean existsByEmail(String email);
+
+    boolean verifyPassword(String username, String rawPassword);
 }

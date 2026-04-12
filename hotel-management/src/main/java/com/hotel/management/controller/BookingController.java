@@ -64,55 +64,19 @@ public class BookingController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<?>> getAllBookings() {
+    public ResponseEntity<ApiResponse<?>> getBookings(
+            @RequestParam(required = false) Integer userId,
+            @RequestParam(required = false) Integer roomId,
+            @RequestParam(required = false) BookingStatus status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
         try {
-            List<BookingDTO> bookings = bookingService.getAllBookings();
-            return ResponseEntity.ok(ApiResponse.success("Bookings retrieved successfully", bookings));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve bookings: " + e.getMessage()));
-        }
-    }
-
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<ApiResponse<?>> getBookingsByUser(@PathVariable Integer userId) {
-        try {
-            List<BookingDTO> bookings = bookingService.getBookingsByUser(userId);
-            return ResponseEntity.ok(ApiResponse.success("Bookings retrieved successfully", bookings));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve bookings: " + e.getMessage()));
-        }
-    }
-
-    @GetMapping("/room/{roomId}")
-    public ResponseEntity<ApiResponse<?>> getBookingsByRoom(@PathVariable Integer roomId) {
-        try {
-            List<BookingDTO> bookings = bookingService.getBookingsByRoom(roomId);
-            return ResponseEntity.ok(ApiResponse.success("Bookings retrieved successfully", bookings));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve bookings: " + e.getMessage()));
-        }
-    }
-
-    @GetMapping("/status/{status}")
-    public ResponseEntity<ApiResponse<?>> getBookingsByStatus(@PathVariable BookingStatus status) {
-        try {
-            List<BookingDTO> bookings = bookingService.getBookingsByStatus(status);
-            return ResponseEntity.ok(ApiResponse.success("Bookings retrieved successfully", bookings));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve bookings: " + e.getMessage()));
-        }
-    }
-
-    @GetMapping("/date-range")
-    public ResponseEntity<ApiResponse<?>> getBookingsByDateRange(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
-        try {
-            List<BookingDTO> bookings = bookingService.getBookingsByDateRange(startDate, endDate);
+            List<BookingDTO> bookings;
+            if (userId != null || roomId != null || status != null || startDate != null || endDate != null) {
+                bookings = bookingService.filterBookings(userId, roomId, status, startDate, endDate);
+            } else {
+                bookings = bookingService.getAllBookings();
+            }
             return ResponseEntity.ok(ApiResponse.success("Bookings retrieved successfully", bookings));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

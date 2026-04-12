@@ -1,172 +1,102 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authApi from '../api/authApi';
+import roomApi from '../api/roomApi';
+import bookingApi from '../api/bookingApi';
+import AdminLayout from '../components/layout/AdminLayout';
 
-const ReceptionistPage = () => {
+const STATUS_BADGE = { CONFIRMED: 'badge-info', CHECKED_IN: 'badge-success', CHECKED_OUT: 'badge-gray', CANCELLED: 'badge-danger', PENDING: 'badge-warning' };
+const STATUS_LABEL = { CONFIRMED: 'Đã xác nhận', CHECKED_IN: 'Đang ở', CHECKED_OUT: 'Đã trả', CANCELLED: 'Đã hủy', PENDING: 'Chờ xử lý' };
+
+export default function ReceptionistPage() {
   const navigate = useNavigate();
   const user = authApi.getCurrentUser();
+  const [stats, setStats] = useState({ available: 0, checkedIn: 0, pending: 0 });
+  const [bookings, setBookings] = useState([]);
 
-  const handleLogout = () => {
-    authApi.logout();
-    navigate('/login');
-  };
-
-  const navigateTo = (path) => {
-    navigate(path);
-  };
+  useEffect(() => {
+    Promise.allSettled([
+      roomApi.getRooms({ available: true }),
+      bookingApi.getBookings({ status: 'CHECKED_IN' }),
+      bookingApi.getBookings({ status: 'PENDING' }),
+      bookingApi.getBookings(),
+    ]).then(([avail, ci, pend, all]) => {
+      setStats({
+        available: avail.value?.data?.length || 0,
+        checkedIn: ci.value?.data?.length || 0,
+        pending: pend.value?.data?.length || 0,
+      });
+      setBookings((all.value?.data || []).slice(0, 6));
+    });
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-amber-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b-4 border-amber-600">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Quản Lý Khách Sạn - Lễ Tân</h1>
-            <p className="text-sm text-gray-600">Chào mừng, {user?.fullName || user?.username}</p>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-          >
-            Đăng Xuất
-          </button>
-        </div>
-      </header>
+    <AdminLayout role="RECEPTIONIST">
+      <div className="mb-6">
+        <h1 className="text-xl font-bold text-gray-900">Dashboard Lễ tân</h1>
+        <p className="text-sm text-gray-500 mt-0.5">Xin chào, {user?.fullName}!</p>
+      </div>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Welcome Section */}
-        <div className="bg-white rounded-lg shadow-md p-8 mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Xin chào, {user?.fullName || user?.username}!
-          </h2>
-          <p className="text-gray-600 text-lg">
-            Đây là trang quản lý dành cho lễ tân. Bạn có thể quản lý đặt phòng, khách hàng và các dịch vụ.
-          </p>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-blue-50 rounded-lg p-6 border-l-4 border-blue-600">
-            <p className="text-gray-600 text-sm font-medium">Đặt Phòng Hôm Nay</p>
-            <p className="text-3xl font-bold text-blue-600 mt-2">0</p>
-          </div>
-          <div className="bg-green-50 rounded-lg p-6 border-l-4 border-green-600">
-            <p className="text-gray-600 text-sm font-medium">Phòng Trống</p>
-            <p className="text-3xl font-bold text-green-600 mt-2">0</p>
-          </div>
-          <div className="bg-purple-50 rounded-lg p-6 border-l-4 border-purple-600">
-            <p className="text-gray-600 text-sm font-medium">Khách Đang Ở</p>
-            <p className="text-3xl font-bold text-purple-600 mt-2">0</p>
-          </div>
-          <div className="bg-orange-50 rounded-lg p-6 border-l-4 border-orange-600">
-            <p className="text-gray-600 text-sm font-medium">Doanh Thu Hôm Nay</p>
-            <p className="text-3xl font-bold text-orange-600 mt-2">0 ₫</p>
-          </div>
-        </div>
-
-        {/* Main Functions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Bookings Management */}
-          <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer"
-               onClick={() => navigateTo('/bookings')}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-gray-900">Quản Lý Đặt Phòng</h3>
-              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-              </svg>
-            </div>
-            <p className="text-gray-600 mb-4">Tạo, chỉnh sửa và quản lý các đặt phòng</p>
-            <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-              Quản Lý Đặt Phòng
-            </button>
-          </div>
-
-          {/* Rooms Management */}
-          <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer"
-               onClick={() => navigateTo('/rooms')}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-gray-900">Quản Lý Phòng</h3>
-              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-3m0 0l7-4 7 4M5 9v10a1 1 0 001 1h12a1 1 0 001-1V9m-9 11l4-4m-4 4l-4-4m9-5l4-4m-4 4l4 4" />
-              </svg>
-            </div>
-            <p className="text-gray-600 mb-4">Xem trạng thái phòng và cập nhật thông tin</p>
-            <button className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-              Quản Lý Phòng
-            </button>
-          </div>
-
-          {/* Services Management */}
-          <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer"
-               onClick={() => navigateTo('/services')}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-gray-900">Quản Lý Dịch Vụ</h3>
-              <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <p className="text-gray-600 mb-4">Quản lý các dịch vụ khách sạn</p>
-            <button className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
-              Quản Lý Dịch Vụ
-            </button>
-          </div>
-
-          {/* Invoices Management */}
-          <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer"
-               onClick={() => navigateTo('/invoices')}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-gray-900">Quản Lý Hóa Đơn</h3>
-              <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <p className="text-gray-600 mb-4">Tạo và quản lý hóa đơn cho khách</p>
-            <button className="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
-              Quản Lý Hóa Đơn
-            </button>
-          </div>
-
-          {/* Room Types */}
-          <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer"
-               onClick={() => navigateTo('/room-types')}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-gray-900">Loại Phòng</h3>
-              <svg className="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-              </svg>
-            </div>
-            <p className="text-gray-600 mb-4">Quản lý các loại phòng khác nhau</p>
-            <button className="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-              Quản Lý Loại Phòng
-            </button>
-          </div>
-        </div>
-
-        {/* User Info Section */}
-        <div className="mt-12 bg-white rounded-lg shadow-md p-8">
-          <h3 className="text-2xl font-bold text-gray-900 mb-6">Thông Tin Tài Khoản</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Tên Đăng Nhập</label>
-              <p className="text-gray-900 font-semibold">{user?.username}</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {[
+          { label: 'Phòng trống', value: stats.available, color: 'bg-green-50', tc: 'text-green-500', d: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' },
+          { label: 'Đang check-in', value: stats.checkedIn, color: 'bg-primary-50', tc: 'text-primary-500', d: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
+          { label: 'Hóa đơn chờ', value: stats.pending, color: 'bg-yellow-50', tc: 'text-yellow-500', d: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+        ].map((s, i) => (
+          <div key={i} className="card p-5 flex items-center gap-4">
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${s.color}`}>
+              <svg className={`w-6 h-6 ${s.tc}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={s.d}/></svg>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Họ Tên</label>
-              <p className="text-gray-900 font-semibold">{user?.fullName}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-              <p className="text-gray-900 font-semibold">{user?.email}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Vai Trò</label>
-              <p className="text-gray-900 font-semibold">{user?.role === 'RECEPTIONIST' ? 'Lễ Tân' : user?.role}</p>
+              <p className="text-sm text-gray-500">{s.label}</p>
+              <p className="text-2xl font-bold text-gray-900">{s.value}</p>
             </div>
           </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        {[
+          { label: 'Đơn chờ duyệt', path: '/receptionist/bookings', cls: 'bg-yellow-500 text-white hover:bg-yellow-600' },
+          { label: 'Check-in khách', path: '/receptionist/bookings', cls: 'bg-green-500 text-white hover:bg-green-600' },
+          { label: 'Check-out khách', path: '/receptionist/bookings', cls: 'bg-primary-500 text-white hover:bg-primary-600' },
+          { label: 'Danh sách phòng', path: '/receptionist/rooms', cls: 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50' },
+        ].map((a, i) => (
+          <button key={i} onClick={() => navigate(a.path)}
+            className={`py-3 px-4 rounded-xl text-sm font-medium transition-colors ${a.cls}`}>{a.label}</button>
+        ))}
+      </div>
+
+      <div className="card">
+        <div className="px-5 py-4 border-b border-gray-100">
+          <h2 className="font-semibold text-gray-900">Đặt phòng gần đây</h2>
         </div>
-      </main>
-    </div>
+        {bookings.length === 0
+          ? <div className="py-12 text-center text-gray-400 text-sm">Chưa có dữ liệu</div>
+          : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-100">
+                  <tr>{['ID','Khách hàng','Phòng','Check-in','Trạng thái'].map(h => (
+                    <th key={h} className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase">{h}</th>
+                  ))}</tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {bookings.map(b => (
+                    <tr key={b.id} className="hover:bg-gray-50">
+                      <td className="px-5 py-3 text-gray-500">#{b.id}</td>
+                      <td className="px-5 py-3 font-medium text-gray-900">{b.userName || `User #${b.userId}`}</td>
+                      <td className="px-5 py-3 text-gray-600">{b.roomNumber || `Room #${b.roomId}`}</td>
+                      <td className="px-5 py-3 text-gray-600">{b.checkInAt ? new Date(b.checkInAt).toLocaleDateString('vi-VN') : '-'}</td>
+                      <td className="px-5 py-3"><span className={STATUS_BADGE[b.status] || 'badge-gray'}>{STATUS_LABEL[b.status] || b.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        }
+      </div>
+    </AdminLayout>
   );
-};
-
-export default ReceptionistPage;
+}

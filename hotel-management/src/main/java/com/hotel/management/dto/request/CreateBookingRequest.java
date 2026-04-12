@@ -1,7 +1,6 @@
 package com.hotel.management.dto.request;
 
 import com.hotel.management.enums.BookingStatus;
-import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -22,11 +21,9 @@ public class CreateBookingRequest {
     private Integer roomId;
 
     @NotNull(message = "Check-in date is required")
-    @Future(message = "Check-in date must be in the future")
     private LocalDateTime checkInAt;
 
     @NotNull(message = "Check-out date is required")
-    @Future(message = "Check-out date must be in the future")
     private LocalDateTime checkOutAt;
 
     @NotNull(message = "Room price is required")

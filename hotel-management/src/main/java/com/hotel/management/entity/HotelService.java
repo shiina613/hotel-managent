@@ -1,6 +1,5 @@
 package com.hotel.management.entity;
 
-import com.hotel.management.enums.ServiceUnit;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -29,9 +28,8 @@ public class HotelService {
     @Column(nullable = false)
     private Integer price;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private ServiceUnit unit;
+    @Column(nullable = false, length = 50)
+    private String unit;
 
     @Column(nullable = false)
     private Boolean isActive;

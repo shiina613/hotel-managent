@@ -29,6 +29,14 @@ public interface RoomRepository extends JpaRepository<Room, Integer> {
     @Query("SELECT r FROM Room r WHERE r.roomNumber LIKE %:keyword% OR r.description LIKE %:keyword%")
     List<Room> searchRooms(@Param("keyword") String keyword);
 
+    @Query("SELECT r FROM Room r WHERE " +
+           "(:status IS NULL OR r.status = :status) AND " +
+           "(:roomTypeId IS NULL OR r.roomType.id = :roomTypeId) AND " +
+           "(:keyword IS NULL OR r.roomNumber LIKE %:keyword% OR r.description LIKE %:keyword%)")
+    List<Room> filterRooms(@Param("status") RoomStatus status,
+                           @Param("roomTypeId") Integer roomTypeId,
+                           @Param("keyword") String keyword);
+
     @Query("SELECT r FROM Room r WHERE r.capacity >= :capacity AND r.status = :status")
     List<Room> findAvailableRoomsByCapacity(@Param("capacity") Integer capacity, @Param("status") RoomStatus status);
 

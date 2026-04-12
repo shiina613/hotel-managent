@@ -4,7 +4,6 @@ import com.hotel.management.dto.RoomTypeDTO;
 import com.hotel.management.dto.request.CreateRoomTypeRequest;
 import com.hotel.management.dto.request.UpdateRoomTypeRequest;
 import com.hotel.management.dto.response.ApiResponse;
-import com.hotel.management.exception.BadRequestException;
 import com.hotel.management.exception.ResourceNotFoundException;
 import com.hotel.management.service.RoomTypeService;
 import jakarta.validation.Valid;
@@ -25,7 +24,6 @@ public class RoomTypeController {
     @PostMapping
     public ResponseEntity<ApiResponse<?>> createRoomType(@Valid @RequestBody CreateRoomTypeRequest request) {
         try {
-            // Check if room type name already exists
             if (roomTypeService.existsByName(request.getName())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ApiResponse.error("Room type name already exists"));
@@ -47,9 +45,11 @@ public class RoomTypeController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<?>> getAllRoomTypes() {
+    public ResponseEntity<ApiResponse<?>> getRoomTypes(@RequestParam(required = false) String keyword) {
         try {
-            List<RoomTypeDTO> roomTypes = roomTypeService.getAllRoomTypes();
+            List<RoomTypeDTO> roomTypes = keyword != null
+                    ? roomTypeService.searchRoomTypes(keyword)
+                    : roomTypeService.getAllRoomTypes();
             return ResponseEntity.ok(ApiResponse.success("Room types retrieved successfully", roomTypes));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -74,29 +74,16 @@ public class RoomTypeController {
         }
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<ApiResponse<?>> searchRoomTypes(@RequestParam String keyword) {
-        try {
-            List<RoomTypeDTO> roomTypes = roomTypeService.searchRoomTypes(keyword);
-            return ResponseEntity.ok(ApiResponse.success("Room types retrieved successfully", roomTypes));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to search room types: " + e.getMessage()));
-        }
-    }
-
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> updateRoomType(
             @PathVariable Integer id,
             @Valid @RequestBody UpdateRoomTypeRequest request) {
         try {
-            // Check if room type exists
             if (!roomTypeService.existsById(id)) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponse.error("Room type not found"));
             }
 
-            // Check if new name already exists (excluding current room type)
             var existingRoomType = roomTypeService.getRoomTypeByName(request.getName());
             if (existingRoomType.isPresent() && !existingRoomType.get().getId().equals(id)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -123,7 +110,6 @@ public class RoomTypeController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> deleteRoomType(@PathVariable Integer id) {
         try {
-            // Check if room type exists
             if (!roomTypeService.existsById(id)) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponse.error("Room type not found"));
@@ -135,7 +121,6 @@ public class RoomTypeController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.error(e.getMessage()));
         } catch (RuntimeException e) {
-            // Handle case where room type has associated rooms
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.error(e.getMessage()));
         } catch (Exception e) {

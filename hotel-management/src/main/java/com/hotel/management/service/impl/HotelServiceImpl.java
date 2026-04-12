@@ -1,7 +1,6 @@
 package com.hotel.management.service.impl;
 
 import com.hotel.management.dto.ServiceDTO;
-import com.hotel.management.enums.ServiceUnit;
 import com.hotel.management.repository.ServiceRepository;
 import com.hotel.management.service.HotelService;
 import lombok.RequiredArgsConstructor;
@@ -27,30 +26,25 @@ public class HotelServiceImpl implements HotelService {
                 .unit(serviceDTO.getUnit())
                 .isActive(serviceDTO.getIsActive())
                 .build();
-
-        com.hotel.management.entity.HotelService savedService = serviceRepository.save(service);
-        return mapToDTO(savedService);
+        return mapToDTO(serviceRepository.save(service));
     }
 
     @Override
     public ServiceDTO updateService(Integer id, ServiceDTO serviceDTO) {
         com.hotel.management.entity.HotelService service = serviceRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Service not found with id: " + id));
-
         service.setName(serviceDTO.getName());
         service.setPrice(serviceDTO.getPrice());
         service.setUnit(serviceDTO.getUnit());
         service.setIsActive(serviceDTO.getIsActive());
-
-        com.hotel.management.entity.HotelService updatedService = serviceRepository.save(service);
-        return mapToDTO(updatedService);
+        return mapToDTO(serviceRepository.save(service));
     }
 
     @Override
     public void deleteService(Integer id) {
-        com.hotel.management.entity.HotelService service = serviceRepository.findById(id)
+        serviceRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Service not found with id: " + id));
-        serviceRepository.delete(service);
+        serviceRepository.deleteById(id);
     }
 
     @Override
@@ -68,33 +62,31 @@ public class HotelServiceImpl implements HotelService {
     @Override
     @Transactional(readOnly = true)
     public List<ServiceDTO> getAllServices() {
-        return serviceRepository.findAll().stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+        return serviceRepository.findAll().stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ServiceDTO> getActiveServices() {
-        return serviceRepository.findAllActiveServices().stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+        return serviceRepository.findAllActiveServices().stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ServiceDTO> getServicesByUnit(ServiceUnit unit) {
-        return serviceRepository.findServicesByUnit(unit).stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+    public List<ServiceDTO> getServicesByUnit(String unit) {
+        return serviceRepository.findServicesByUnit(unit).stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ServiceDTO> searchServices(String keyword) {
-        return serviceRepository.searchActiveServices(keyword).stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+        return serviceRepository.searchActiveServices(keyword).stream().map(this::mapToDTO).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ServiceDTO> filterServices(Boolean active, String unit, String keyword) {
+        return serviceRepository.filterServices(active, unit, keyword).stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
     @Override

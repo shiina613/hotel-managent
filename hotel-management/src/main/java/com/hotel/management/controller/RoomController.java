@@ -1,5 +1,7 @@
 package com.hotel.management.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hotel.management.dto.RoomDTO;
 import com.hotel.management.dto.request.CreateRoomRequest;
 import com.hotel.management.dto.response.ApiResponse;
@@ -18,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,6 +30,7 @@ import java.util.UUID;
 public class RoomController {
 
     private final RoomService roomService;
+    private final ObjectMapper objectMapper;
 
     @PostMapping
     public ResponseEntity<ApiResponse<?>> createRoom(@Valid @RequestBody CreateRoomRequest request) {
@@ -44,6 +48,7 @@ public class RoomController {
                     .capacity(request.getCapacity())
                     .imgFolder(request.getImgFolder())
                     .price(request.getPrice())
+                    .hourlyPrice(request.getHourlyPrice())
                     .build();
 
             var createdRoom = roomService.createRoom(roomDTO);
@@ -74,68 +79,28 @@ public class RoomController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<?>> getAllRooms() {
+    public ResponseEntity<ApiResponse<?>> getRooms(
+            @RequestParam(required = false) RoomStatus status,
+            @RequestParam(required = false) Integer type,
+            @RequestParam(required = false) Boolean available,
+            @RequestParam(required = false) Integer capacity,
+            @RequestParam(required = false) String keyword) {
         try {
-            List<RoomDTO> rooms = roomService.getAllRooms();
+            List<RoomDTO> rooms;
+            // available + capacity: filter available rooms by capacity
+            if (Boolean.TRUE.equals(available) && capacity != null) {
+                rooms = roomService.getAvailableRoomsByCapacity(capacity);
+            } else if (status != null || type != null || keyword != null) {
+                rooms = roomService.filterRooms(status, type, keyword);
+            } else if (Boolean.TRUE.equals(available)) {
+                rooms = roomService.getAvailableRooms();
+            } else {
+                rooms = roomService.getAllRooms();
+            }
             return ResponseEntity.ok(ApiResponse.success("Rooms retrieved successfully", rooms));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Failed to retrieve rooms: " + e.getMessage()));
-        }
-    }
-
-    @GetMapping("/available")
-    public ResponseEntity<ApiResponse<?>> getAvailableRooms() {
-        try {
-            List<RoomDTO> rooms = roomService.getAvailableRooms();
-            return ResponseEntity.ok(ApiResponse.success("Available rooms retrieved successfully", rooms));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve available rooms: " + e.getMessage()));
-        }
-    }
-
-    @GetMapping("/available/capacity/{capacity}")
-    public ResponseEntity<ApiResponse<?>> getAvailableRoomsByCapacity(@PathVariable Integer capacity) {
-        try {
-            List<RoomDTO> rooms = roomService.getAvailableRoomsByCapacity(capacity);
-            return ResponseEntity.ok(ApiResponse.success("Available rooms retrieved successfully", rooms));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve available rooms: " + e.getMessage()));
-        }
-    }
-
-    @GetMapping("/status/{status}")
-    public ResponseEntity<ApiResponse<?>> getRoomsByStatus(@PathVariable RoomStatus status) {
-        try {
-            List<RoomDTO> rooms = roomService.getRoomsByStatus(status);
-            return ResponseEntity.ok(ApiResponse.success("Rooms retrieved successfully", rooms));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve rooms: " + e.getMessage()));
-        }
-    }
-
-    @GetMapping("/type/{roomTypeId}")
-    public ResponseEntity<ApiResponse<?>> getRoomsByType(@PathVariable Integer roomTypeId) {
-        try {
-            List<RoomDTO> rooms = roomService.getRoomsByType(roomTypeId);
-            return ResponseEntity.ok(ApiResponse.success("Rooms retrieved successfully", rooms));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve rooms: " + e.getMessage()));
-        }
-    }
-
-    @GetMapping("/search")
-    public ResponseEntity<ApiResponse<?>> searchRooms(@RequestParam String keyword) {
-        try {
-            List<RoomDTO> rooms = roomService.searchRooms(keyword);
-            return ResponseEntity.ok(ApiResponse.success("Rooms retrieved successfully", rooms));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to search rooms: " + e.getMessage()));
         }
     }
 
@@ -150,6 +115,7 @@ public class RoomController {
                     .capacity(request.getCapacity())
                     .imgFolder(request.getImgFolder())
                     .price(request.getPrice())
+                    .hourlyPrice(request.getHourlyPrice())
                     .build();
 
             var updatedRoom = roomService.updateRoom(id, roomDTO);
@@ -175,56 +141,62 @@ public class RoomController {
     @PostMapping("/{id}/upload-image")
     public ResponseEntity<ApiResponse<?>> uploadRoomImage(
             @PathVariable Integer id,
-            @RequestParam("image") MultipartFile file) {
+            @RequestParam("image") MultipartFile file,
+            @RequestParam(value = "isThumb", defaultValue = "false") boolean isThumb) {
         try {
-            // Validate file
             if (file.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ApiResponse.error("Please select a file to upload"));
             }
-
-            // Check if room exists
             var roomOptional = roomService.getRoomById(id);
             if (roomOptional.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponse.error("Room not found"));
             }
 
-            // Create upload directory if not exists
-            String uploadDir = "uploads/rooms/" + id;
-            File directory = new File(uploadDir);
-            if (!directory.exists()) {
-                directory.mkdirs();
-            }
+            String uploadDir = System.getProperty("user.dir") + "/uploads/rooms/" + id;
+            new File(uploadDir).mkdirs();
 
-            // Generate unique filename
             String originalFilename = file.getOriginalFilename();
-            String fileExtension = originalFilename != null && originalFilename.contains(".")
-                    ? originalFilename.substring(originalFilename.lastIndexOf("."))
-                    : "";
-            String filename = UUID.randomUUID().toString() + fileExtension;
+            String ext = (originalFilename != null && originalFilename.contains("."))
+                    ? originalFilename.substring(originalFilename.lastIndexOf(".")) : "";
+            String filename = UUID.randomUUID() + ext;
 
-            // Save file
             Path filePath = Paths.get(uploadDir, filename);
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-            // Update room with image URL
             String imageUrl = "/uploads/rooms/" + id + "/" + filename;
             var room = roomOptional.get();
-            room.setImgFolder(imageUrl);
-            
-            var roomDTO = RoomDTO.builder()
-                    .roomNumber(room.getRoomNumber())
-                    .roomTypeId(room.getRoomTypeId())
-                    .status(room.getStatus())
-                    .description(room.getDescription())
-                    .capacity(room.getCapacity())
-                    .imgFolder(imageUrl)
-                    .price(room.getPrice())
-                    .build();
-            
-            var updatedRoom = roomService.updateRoom(id, roomDTO);
 
+            // Parse existing images JSON array
+            String existing = room.getImgFolder();
+            List<String> images;
+            try {
+                if (existing != null && existing.startsWith("[")) {
+                    images = objectMapper.readValue(existing, new TypeReference<List<String>>(){});
+                } else {
+                    images = new ArrayList<>();
+                    if (existing != null && !existing.isBlank()) images.add(existing);
+                }
+            } catch (Exception ex) {
+                images = new ArrayList<>();
+            }
+
+            if (isThumb) {
+                images.removeIf(u -> u.startsWith("thumb:"));
+                images.add(0, "thumb:" + imageUrl);
+            } else {
+                images.add(imageUrl);
+            }
+
+            String newImgFolder = objectMapper.writeValueAsString(images);
+            var roomDTO = RoomDTO.builder()
+                    .roomNumber(room.getRoomNumber()).roomTypeId(room.getRoomTypeId())
+                    .status(room.getStatus()).description(room.getDescription())
+                    .capacity(room.getCapacity()).imgFolder(newImgFolder).price(room.getPrice())
+                    .hourlyPrice(room.getHourlyPrice())
+                    .build();
+            var updatedRoom = roomService.updateRoom(id, roomDTO);
             return ResponseEntity.ok(ApiResponse.success("Image uploaded successfully", updatedRoom));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -232,6 +204,34 @@ public class RoomController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Failed to upload image: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{id}/images")
+    public ResponseEntity<ApiResponse<?>> deleteRoomImage(
+            @PathVariable Integer id,
+            @RequestParam String imageUrl) {
+        try {
+            var roomOptional = roomService.getRoomById(id);
+            if (roomOptional.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("Room not found"));
+            var room = roomOptional.get();
+            List<String> images;
+            try {
+                String existing = room.getImgFolder();
+                images = (existing != null && existing.startsWith("["))
+                    ? objectMapper.readValue(existing, new TypeReference<List<String>>(){})
+                    : new ArrayList<>();
+            } catch (Exception ex) { images = new ArrayList<>(); }
+            images.removeIf(u -> u.equals(imageUrl) || u.equals("thumb:" + imageUrl));
+            var roomDTO = RoomDTO.builder()
+                    .roomNumber(room.getRoomNumber()).roomTypeId(room.getRoomTypeId())
+                    .status(room.getStatus()).description(room.getDescription())
+                    .capacity(room.getCapacity()).imgFolder(objectMapper.writeValueAsString(images)).price(room.getPrice())
+                    .hourlyPrice(room.getHourlyPrice())
+                    .build();
+            return ResponseEntity.ok(ApiResponse.success("Image deleted", roomService.updateRoom(id, roomDTO)));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error(e.getMessage()));
         }
     }
 

@@ -1,7 +1,6 @@
 package com.hotel.management.service;
 
 import com.hotel.management.dto.ServiceDTO;
-import com.hotel.management.enums.ServiceUnit;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,9 +21,11 @@ public interface HotelService {
 
     List<ServiceDTO> getActiveServices();
 
-    List<ServiceDTO> getServicesByUnit(ServiceUnit unit);
+    List<ServiceDTO> getServicesByUnit(String unit);
 
     List<ServiceDTO> searchServices(String keyword);
+
+    List<ServiceDTO> filterServices(Boolean active, String unit, String keyword);
 
     boolean existsByName(String name);
 }

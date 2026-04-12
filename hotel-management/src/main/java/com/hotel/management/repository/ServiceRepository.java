@@ -1,7 +1,6 @@
 package com.hotel.management.repository;
 
 import com.hotel.management.entity.HotelService;
-import com.hotel.management.enums.ServiceUnit;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,7 +18,7 @@ public interface ServiceRepository extends JpaRepository<HotelService, Integer> 
 
     List<HotelService> findByIsActive(Boolean isActive);
 
-    List<HotelService> findByUnit(ServiceUnit unit);
+    List<HotelService> findByUnit(String unit);
 
     @Query("SELECT s FROM HotelService s WHERE s.isActive = true ORDER BY s.name ASC")
     List<HotelService> findAllActiveServices();
@@ -28,8 +27,19 @@ public interface ServiceRepository extends JpaRepository<HotelService, Integer> 
     List<HotelService> searchActiveServices(@Param("keyword") String keyword);
 
     @Query("SELECT s FROM HotelService s WHERE s.unit = :unit AND s.isActive = true")
-    List<HotelService> findServicesByUnit(@Param("unit") ServiceUnit unit);
+    List<HotelService> findServicesByUnit(@Param("unit") String unit);
+
+    @Query("SELECT s FROM HotelService s WHERE " +
+           "(:active IS NULL OR s.isActive = :active) AND " +
+           "(:unit IS NULL OR s.unit = :unit) AND " +
+           "(:keyword IS NULL OR s.name LIKE %:keyword%)")
+    List<HotelService> filterServices(@Param("active") Boolean active,
+                                      @Param("unit") String unit,
+                                      @Param("keyword") String keyword);
 
     @Query("SELECT s FROM HotelService s ORDER BY s.createAt DESC")
     List<HotelService> findAllOrderByCreateAtDesc();
+
+    @Query("SELECT DISTINCT s.unit FROM HotelService s ORDER BY s.unit ASC")
+    List<String> findAllUnits();
 }

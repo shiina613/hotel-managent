@@ -61,7 +61,23 @@ public class AuthController {
                         .body(ApiResponse.error("Invalid username or password"));
             }
 
-            // TODO: Implement password verification and JWT token generation
+            // Verify password
+            if (!userService.verifyPassword(request.getUsername(), request.getPassword())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("Invalid username or password"));
+            }
+
+            // Check account status
+            var userStatus = user.get().getStatus();
+            if (userStatus != com.hotel.management.enums.UserStatus.ACTIVE) {
+                String msg = switch (userStatus) {
+                    case SUSPENDED -> "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.";
+                    case INACTIVE   -> "Tài khoản chưa được kích hoạt.";
+                    case DELETED    -> "Tài khoản không tồn tại.";
+                    default         -> "Tài khoản không hợp lệ.";
+                };
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.error(msg));
+            }
             var loginResponse = LoginResponse.builder()
                     .userId(user.get().getId())
                     .username(user.get().getUsername())

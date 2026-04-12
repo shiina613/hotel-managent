@@ -149,6 +149,15 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<BookingDTO> filterBookings(Integer userId, Integer roomId, BookingStatus status,
+                                           LocalDateTime startDate, LocalDateTime endDate) {
+        return bookingRepository.filterBookings(userId, roomId, status, startDate, endDate).stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public long countBookingsByStatus(BookingStatus status) {
         return bookingRepository.countByStatus(status);
     }

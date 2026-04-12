@@ -21,6 +21,7 @@ public class RoomDTO {
     private Integer capacity;
     private String imgFolder;
     private Integer price;
+    private Integer hourlyPrice;
     private LocalDateTime createAt;
     private LocalDateTime updateAt;
 }

@@ -1,0 +1,100 @@
+====================================================
+  DANH SÁCH API - HOTEL MANAGEMENT SYSTEM
+  Base URL: http://localhost:8080/api/v1
+====================================================
+
+----------------------------------------------------
+1. AUTH - Xác thực (/api/v1/auth)
+----------------------------------------------------
+POST   /api/v1/auth/register          - Đăng ký tài khoản mới
+POST   /api/v1/auth/login             - Đăng nhập
+
+----------------------------------------------------
+2. ROOMS - Phòng (/api/v1/rooms)
+----------------------------------------------------
+POST   /api/v1/rooms                  - Tạo phòng mới
+GET    /api/v1/rooms                  - Lấy danh sách phòng (hỗ trợ filter)
+         ?status=AVAILABLE            - Lọc theo trạng thái (AVAILABLE, OCCUPIED, MAINTENANCE)
+         ?type={roomTypeId}           - Lọc theo loại phòng
+         ?available=true              - Chỉ lấy phòng còn trống
+         ?available=true&capacity=2   - Phòng trống theo sức chứa tối thiểu
+         ?keyword=                    - Tìm kiếm theo số phòng hoặc mô tả
+         (có thể kết hợp: ?status=AVAILABLE&type=1&keyword=deluxe)
+GET    /api/v1/rooms/{id}             - Lấy thông tin phòng theo ID
+GET    /api/v1/rooms/{id}/image       - Lấy URL ảnh phòng
+PUT    /api/v1/rooms/{id}             - Cập nhật thông tin phòng
+DELETE /api/v1/rooms/{id}             - Xóa phòng
+POST   /api/v1/rooms/{id}/upload-image - Upload ảnh phòng (multipart: image)
+
+----------------------------------------------------
+3. ROOM TYPES - Loại phòng (/api/v1/room-types)
+----------------------------------------------------
+POST   /api/v1/room-types             - Tạo loại phòng mới
+GET    /api/v1/room-types             - Lấy danh sách loại phòng (hỗ trợ filter)
+         ?keyword=                    - Tìm kiếm theo tên
+GET    /api/v1/room-types/{id}        - Lấy loại phòng theo ID
+PUT    /api/v1/room-types/{id}        - Cập nhật loại phòng
+DELETE /api/v1/room-types/{id}        - Xóa loại phòng
+
+----------------------------------------------------
+4. SERVICES - Dịch vụ (/api/v1/services)
+----------------------------------------------------
+POST   /api/v1/services               - Tạo dịch vụ mới
+GET    /api/v1/services               - Lấy danh sách dịch vụ (hỗ trợ filter)
+         ?active=true                 - Lọc dịch vụ đang hoạt động
+         ?unit=HOUR                   - Lọc theo đơn vị tính
+         ?keyword=                    - Tìm kiếm theo tên
+         (có thể kết hợp: ?active=true&unit=HOUR&keyword=spa)
+GET    /api/v1/services/{id}          - Lấy dịch vụ theo ID
+PUT    /api/v1/services/{id}          - Cập nhật dịch vụ
+DELETE /api/v1/services/{id}          - Xóa dịch vụ
+
+----------------------------------------------------
+5. BOOKINGS - Đặt phòng (/api/v1/bookings)
+----------------------------------------------------
+POST   /api/v1/bookings               - Tạo đặt phòng mới
+GET    /api/v1/bookings               - Lấy danh sách đặt phòng (hỗ trợ filter)
+         ?userId={id}                 - Lọc theo người dùng
+         ?roomId={id}                 - Lọc theo phòng
+         ?status=CONFIRMED            - Lọc theo trạng thái
+         ?startDate=&endDate=         - Lọc theo khoảng thời gian (ISO 8601)
+         (có thể kết hợp: ?userId=1&status=CONFIRMED)
+GET    /api/v1/bookings/{id}          - Lấy đặt phòng theo ID
+GET    /api/v1/bookings/current       - Lấy danh sách đặt phòng hiện tại (đang check-in)
+PUT    /api/v1/bookings/{id}          - Cập nhật đặt phòng
+PATCH  /api/v1/bookings/{id}/status/{status} - Cập nhật trạng thái đặt phòng
+DELETE /api/v1/bookings/{id}          - Xóa đặt phòng
+
+----------------------------------------------------
+6. INVOICES - Hóa đơn (/api/v1/invoices)
+----------------------------------------------------
+POST   /api/v1/invoices               - Tạo hóa đơn mới
+GET    /api/v1/invoices               - Lấy danh sách hóa đơn (hỗ trợ filter)
+         ?userId={id}                 - Lọc theo người dùng
+         ?bookingId={id}              - Lọc theo đặt phòng
+         ?status=PAID                 - Lọc theo trạng thái (dùng ?status=UNPAID thay cho /unpaid)
+         ?paymentMethod=CASH          - Lọc theo phương thức thanh toán
+         ?startDate=&endDate=         - Lọc theo khoảng thời gian (ISO 8601)
+         (có thể kết hợp: ?status=UNPAID&startDate=...&endDate=...)
+GET    /api/v1/invoices/{id}          - Lấy hóa đơn theo ID
+PUT    /api/v1/invoices/{id}          - Cập nhật hóa đơn
+PATCH  /api/v1/invoices/{id}/status/{status}              - Cập nhật trạng thái hóa đơn
+PATCH  /api/v1/invoices/{id}/mark-as-paid/{paymentMethod} - Đánh dấu hóa đơn đã thanh toán
+DELETE /api/v1/invoices/{id}          - Xóa hóa đơn
+
+----------------------------------------------------
+7. USERS - Người dùng (/api/v1/users)
+----------------------------------------------------
+GET    /api/v1/users                  - Lấy danh sách người dùng (hỗ trợ filter)
+         ?role=ADMIN                  - Lọc theo vai trò (ADMIN, RECEPTIONIST, CUSTOMER)
+         ?status=ACTIVE               - Lọc theo trạng thái
+         ?keyword=                    - Tìm kiếm theo username, email, họ tên
+         (có thể kết hợp: ?role=RECEPTIONIST&status=ACTIVE)
+GET    /api/v1/users/me?username=     - Lấy thông tin người dùng hiện tại
+GET    /api/v1/users/{id}             - Lấy người dùng theo ID
+PUT    /api/v1/users/{id}             - Cập nhật thông tin người dùng
+DELETE /api/v1/users/{id}             - Xóa người dùng
+
+====================================================
+  TỔNG CỘNG: 34 endpoints
+====================================================
