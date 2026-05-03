@@ -1865,3 +1865,178 @@ This generated password is for development use only. Your security configuration
 2026-05-04 03:54:41.115 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
 2026-05-04 03:54:41.119 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
 2026-05-04 03:54:41.126 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-04 03:54:47.882 [background-preinit] INFO  o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.3.Final
+2026-05-04 03:54:47.939 [main] INFO  c.h.m.HotelManagementApplication - Starting HotelManagementApplication using Java 17.0.18 with PID 20140 (C:\Users\quang\Documents\datn\Phanla\hotel-managent\hotel-management\target\classes started by quang in C:\Users\quang\Documents\datn\Phanla\hotel-managent\hotel-management)
+2026-05-04 03:54:47.940 [main] INFO  c.h.m.HotelManagementApplication - No active profile set, falling back to 1 default profile: "default"
+2026-05-04 03:54:48.789 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-05-04 03:54:48.869 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 71 ms. Found 7 JPA repository interfaces.
+2026-05-04 03:54:49.393 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-05-04 03:54:49.404 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-05-04 03:54:49.407 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-05-04 03:54:49.408 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.52]
+2026-05-04 03:54:49.474 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-05-04 03:54:49.475 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1488 ms
+2026-05-04 03:54:49.651 [main] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-05-04 03:54:49.697 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.6.42.Final
+2026-05-04 03:54:49.729 [main] INFO  o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-05-04 03:54:49.974 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-05-04 03:54:50.002 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-04 03:54:50.288 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@4552f905
+2026-05-04 03:54:50.291 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-04 03:54:50.331 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-05-04 03:54:50.333 [main] WARN  org.hibernate.orm.deprecation - HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2026-05-04 03:54:50.352 [main] INFO  o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 8.0
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-05-04 03:54:51.343 [main] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-05-04 03:54:51.449 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-05-04 03:54:51.710 [main] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-05-04 03:54:52.896 [main] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-05-04 03:54:53.057 [main] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 605accfd-d092-4145-a736-7bb318cd0dc7
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2026-05-04 03:54:53.064 [main] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2026-05-04 03:54:53.406 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-05-04 03:54:53.425 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-05-04 03:54:53.435 [main] INFO  c.h.m.HotelManagementApplication - Started HotelManagementApplication in 6.013 seconds (process running for 6.325)
+2026-05-04 03:54:53.545 [main] INFO  c.h.m.s.PasswordMigrationRunner - Migrated 0 accounts to BCrypt
+2026-05-04 03:54:53.595 [main] INFO  c.h.m.config.DatabaseMigrationRunner - Database migration completed successfully
+2026-05-04 04:02:36.717 [http-nio-8080-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-05-04 04:02:36.717 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-05-04 04:02:36.719 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2026-05-04 04:02:36.997 [http-nio-8080-exec-1] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms/4 - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 275ms - Status: 200
+2026-05-04 04:02:37.014 [http-nio-8080-exec-2] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms/4 - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 17ms - Status: 200
+2026-05-04 04:02:37.118 [http-nio-8080-exec-8] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/4/f4bf6089-c008-4065-abf9-ad8af531c1e7.png - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 10ms - Status: 200
+2026-05-04 04:02:37.118 [http-nio-8080-exec-10] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/4/8bad2a5c-1682-49b9-a24f-e99162782551.png - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 9ms - Status: 200
+2026-05-04 04:02:41.367 [http-nio-8080-exec-5] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/banner/hero.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 10ms - Status: 200
+2026-05-04 04:02:41.378 [http-nio-8080-exec-6] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/services/spa.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 5ms - Status: 200
+2026-05-04 04:02:41.383 [http-nio-8080-exec-3] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/services/restaurant.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 7ms - Status: 200
+2026-05-04 04:02:41.384 [http-nio-8080-exec-9] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/services/airport.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 7ms - Status: 200
+2026-05-04 04:02:41.379 [http-nio-8080-exec-7] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/services/pool.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 6ms - Status: 200
+2026-05-04 04:02:41.446 [http-nio-8080-exec-4] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 69ms - Status: 200
+2026-05-04 04:02:41.452 [http-nio-8080-exec-1] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/services - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 66ms - Status: 200
+2026-05-04 04:02:41.479 [http-nio-8080-exec-8] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/services - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 25ms - Status: 200
+2026-05-04 04:02:41.483 [http-nio-8080-exec-2] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 35ms - Status: 200
+2026-05-04 04:02:41.500 [http-nio-8080-exec-10] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/services/pool.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 8ms - Status: 200
+2026-05-04 04:02:41.505 [http-nio-8080-exec-5] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/7/c5d422e7-f56a-41ba-87e7-c51370562519.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 9ms - Status: 200
+2026-05-04 04:02:41.506 [http-nio-8080-exec-6] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/services/gym.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 6ms - Status: 200
+2026-05-04 04:02:41.509 [http-nio-8080-exec-3] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/services/laundry.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 5ms - Status: 200
+2026-05-04 04:02:41.515 [http-nio-8080-exec-9] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/3/5b164591-a960-4c94-a6fa-4a0597932e01.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 8ms - Status: 200
+2026-05-04 04:02:41.518 [http-nio-8080-exec-7] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/5/8ac6d2da-316e-4eaf-ab36-4e5c42bfa20d.png - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 4ms - Status: 200
+2026-05-04 04:02:43.565 [http-nio-8080-exec-4] INFO  c.h.m.controller.AuthController - Login success - username: khachhang01, IP: 0:0:0:0:0:0:0:1
+2026-05-04 04:02:43.585 [http-nio-8080-exec-4] INFO  c.h.m.config.RequestLoggingFilter - [POST] /api/v1/auth/login - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 390ms - Status: 200
+2026-05-04 04:02:43.658 [http-nio-8080-exec-8] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/services - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 19ms - Status: 200
+2026-05-04 04:02:43.665 [http-nio-8080-exec-1] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 27ms - Status: 200
+2026-05-04 04:02:43.676 [http-nio-8080-exec-2] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/services - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 17ms - Status: 200
+2026-05-04 04:02:43.700 [http-nio-8080-exec-10] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 34ms - Status: 200
+2026-05-04 04:02:48.598 [http-nio-8080-exec-5] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms/4 - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 14ms - Status: 200
+2026-05-04 04:02:48.615 [http-nio-8080-exec-6] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms/4 - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 16ms - Status: 200
+2026-05-04 04:02:48.616 [http-nio-8080-exec-3] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/4/8bad2a5c-1682-49b9-a24f-e99162782551.png - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 3ms - Status: 200
+2026-05-04 04:03:08.387 [http-nio-8080-exec-9] INFO  c.h.m.config.RequestLoggingFilter - [OPTIONS] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 2ms - Status: 200
+2026-05-04 04:03:08.466 [http-nio-8080-exec-7] INFO  c.h.m.s.impl.BookingServiceImpl - Booking created with id=2, roomId=4, userId=8, status=PENDING
+2026-05-04 04:03:08.478 [http-nio-8080-exec-7] INFO  c.h.m.config.RequestLoggingFilter - [POST] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 88ms - Status: 201
+2026-05-04 04:03:08.542 [http-nio-8080-exec-4] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 30ms - Status: 200
+2026-05-04 04:03:08.563 [http-nio-8080-exec-8] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 20ms - Status: 200
+2026-05-04 04:03:10.731 [http-nio-8080-exec-1] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/banner/hero.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 5ms - Status: 200
+2026-05-04 04:03:10.742 [http-nio-8080-exec-2] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/services/spa.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 4ms - Status: 200
+2026-05-04 04:03:10.755 [http-nio-8080-exec-6] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/services/restaurant.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 9ms - Status: 200
+2026-05-04 04:03:10.756 [http-nio-8080-exec-2] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/services/pool.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 9ms - Status: 200
+2026-05-04 04:03:10.757 [http-nio-8080-exec-9] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/services/airport.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 8ms - Status: 200
+2026-05-04 04:03:10.772 [http-nio-8080-exec-5] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/services - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 32ms - Status: 200
+2026-05-04 04:03:10.783 [http-nio-8080-exec-10] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 44ms - Status: 200
+2026-05-04 04:03:10.797 [http-nio-8080-exec-7] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/services - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 24ms - Status: 200
+2026-05-04 04:03:10.813 [http-nio-8080-exec-8] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/services/pool.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 6ms - Status: 200
+2026-05-04 04:03:10.819 [http-nio-8080-exec-4] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 35ms - Status: 200
+2026-05-04 04:03:10.826 [http-nio-8080-exec-1] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/services/gym.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 10ms - Status: 200
+2026-05-04 04:03:10.827 [http-nio-8080-exec-3] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/services/laundry.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 9ms - Status: 200
+2026-05-04 04:03:10.860 [http-nio-8080-exec-6] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/7/c5d422e7-f56a-41ba-87e7-c51370562519.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 10ms - Status: 200
+2026-05-04 04:03:10.861 [http-nio-8080-exec-9] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/5/8ac6d2da-316e-4eaf-ab36-4e5c42bfa20d.png - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 5ms - Status: 200
+2026-05-04 04:03:10.863 [http-nio-8080-exec-2] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/3/5b164591-a960-4c94-a6fa-4a0597932e01.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 7ms - Status: 200
+2026-05-04 04:03:28.763 [http-nio-8080-exec-5] INFO  c.h.m.controller.AuthController - Login success - username: letan01, IP: 0:0:0:0:0:0:0:1
+2026-05-04 04:03:28.765 [http-nio-8080-exec-5] INFO  c.h.m.config.RequestLoggingFilter - [POST] /api/v1/auth/login - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 310ms - Status: 200
+2026-05-04 04:03:28.878 [http-nio-8080-exec-8] INFO  c.h.m.config.RequestLoggingFilter - [OPTIONS] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 1ms - Status: 200
+2026-05-04 04:03:28.880 [http-nio-8080-exec-4] INFO  c.h.m.config.RequestLoggingFilter - [OPTIONS] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 1ms - Status: 200
+2026-05-04 04:03:28.883 [http-nio-8080-exec-3] INFO  c.h.m.config.RequestLoggingFilter - [OPTIONS] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 1ms - Status: 200
+2026-05-04 04:03:28.884 [http-nio-8080-exec-1] INFO  c.h.m.config.RequestLoggingFilter - [OPTIONS] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 2ms - Status: 200
+2026-05-04 04:03:28.886 [http-nio-8080-exec-10] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 27ms - Status: 200
+2026-05-04 04:03:28.899 [http-nio-8080-exec-7] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 25ms - Status: 200
+2026-05-04 04:03:28.920 [http-nio-8080-exec-2] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 17ms - Status: 200
+2026-05-04 04:03:28.920 [http-nio-8080-exec-6] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 28ms - Status: 200
+2026-05-04 04:03:28.923 [http-nio-8080-exec-9] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 24ms - Status: 200
+2026-05-04 04:03:28.932 [http-nio-8080-exec-5] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 27ms - Status: 200
+2026-05-04 04:03:28.937 [http-nio-8080-exec-8] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 15ms - Status: 200
+2026-05-04 04:03:28.953 [http-nio-8080-exec-4] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 21ms - Status: 200
+2026-05-04 04:03:31.989 [http-nio-8080-exec-1] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/room-types - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 13ms - Status: 200
+2026-05-04 04:03:31.996 [http-nio-8080-exec-3] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 22ms - Status: 200
+2026-05-04 04:03:32.002 [http-nio-8080-exec-10] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/room-types - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 12ms - Status: 200
+2026-05-04 04:03:32.017 [http-nio-8080-exec-7] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 20ms - Status: 200
+2026-05-04 04:03:32.017 [http-nio-8080-exec-6] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/4/f4bf6089-c008-4065-abf9-ad8af531c1e7.png - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 3ms - Status: 200
+2026-05-04 04:03:32.017 [http-nio-8080-exec-9] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/5/8ac6d2da-316e-4eaf-ab36-4e5c42bfa20d.png - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 3ms - Status: 200
+2026-05-04 04:03:32.019 [http-nio-8080-exec-2] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/3/5b164591-a960-4c94-a6fa-4a0597932e01.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 7ms - Status: 200
+2026-05-04 04:03:32.022 [http-nio-8080-exec-5] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/7/c5d422e7-f56a-41ba-87e7-c51370562519.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 7ms - Status: 200
+2026-05-04 04:03:33.070 [http-nio-8080-exec-4] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 13ms - Status: 200
+2026-05-04 04:03:33.080 [http-nio-8080-exec-8] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 26ms - Status: 200
+2026-05-04 04:03:33.085 [http-nio-8080-exec-10] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 12ms - Status: 200
+2026-05-04 04:03:33.086 [http-nio-8080-exec-1] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 21ms - Status: 200
+2026-05-04 04:03:33.090 [http-nio-8080-exec-3] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 24ms - Status: 200
+2026-05-04 04:03:33.108 [http-nio-8080-exec-6] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 27ms - Status: 200
+2026-05-04 04:03:33.109 [http-nio-8080-exec-7] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 20ms - Status: 200
+2026-05-04 04:03:33.112 [http-nio-8080-exec-9] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 21ms - Status: 200
+2026-05-04 04:03:33.533 [http-nio-8080-exec-2] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 19ms - Status: 200
+2026-05-04 04:03:33.536 [http-nio-8080-exec-5] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 18ms - Status: 200
+2026-05-04 04:03:33.552 [http-nio-8080-exec-4] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 18ms - Status: 200
+2026-05-04 04:03:33.556 [http-nio-8080-exec-8] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 20ms - Status: 200
+2026-05-04 04:03:34.986 [http-nio-8080-exec-1] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 12ms - Status: 200
+2026-05-04 04:03:34.994 [http-nio-8080-exec-10] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 21ms - Status: 200
+2026-05-04 04:03:35.000 [http-nio-8080-exec-3] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 20ms - Status: 200
+2026-05-04 04:03:35.001 [http-nio-8080-exec-6] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 20ms - Status: 200
+2026-05-04 04:03:35.008 [http-nio-8080-exec-7] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 21ms - Status: 200
+2026-05-04 04:03:35.017 [http-nio-8080-exec-9] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 22ms - Status: 200
+2026-05-04 04:03:35.020 [http-nio-8080-exec-5] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 18ms - Status: 200
+2026-05-04 04:03:35.020 [http-nio-8080-exec-2] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 19ms - Status: 200
+2026-05-04 04:03:55.606 [http-nio-8080-exec-4] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 21ms - Status: 200
+2026-05-04 04:03:55.615 [http-nio-8080-exec-8] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 26ms - Status: 200
+2026-05-04 04:03:55.627 [http-nio-8080-exec-1] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 19ms - Status: 200
+2026-05-04 04:03:55.636 [http-nio-8080-exec-10] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 21ms - Status: 200
+2026-05-04 04:03:58.114 [http-nio-8080-exec-3] INFO  c.h.m.config.RequestLoggingFilter - [OPTIONS] /api/v1/bookings/2/status - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 0ms - Status: 200
+2026-05-04 04:03:58.131 [http-nio-8080-exec-6] INFO  c.h.m.s.impl.BookingServiceImpl - Booking id=2 status changed: PENDING ? CONFIRMED by user=letan01
+2026-05-04 04:03:58.147 [http-nio-8080-exec-6] INFO  c.h.m.config.RequestLoggingFilter - [PUT] /api/v1/bookings/2/status - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 28ms - Status: 200
+2026-05-04 04:03:58.168 [http-nio-8080-exec-7] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 14ms - Status: 200
+2026-05-04 04:03:58.169 [http-nio-8080-exec-9] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 15ms - Status: 200
+2026-05-04 04:04:06.923 [http-nio-8080-exec-2] INFO  c.h.m.s.impl.BookingServiceImpl - Booking id=2 status changed: CONFIRMED ? CHECKED_IN by user=letan01
+2026-05-04 04:04:06.939 [http-nio-8080-exec-2] INFO  c.h.m.config.RequestLoggingFilter - [PUT] /api/v1/bookings/2/status - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 24ms - Status: 200
+2026-05-04 04:04:06.960 [http-nio-8080-exec-5] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 14ms - Status: 200
+2026-05-04 04:04:06.961 [http-nio-8080-exec-4] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 15ms - Status: 200
+2026-05-04 04:04:11.457 [http-nio-8080-exec-8] INFO  c.h.m.s.impl.BookingServiceImpl - Invoice auto-created for booking id=2, totalAmount=21000000
+2026-05-04 04:04:11.458 [http-nio-8080-exec-8] INFO  c.h.m.s.impl.BookingServiceImpl - Booking id=2 status changed: CHECKED_IN ? CHECKED_OUT by user=letan01
+2026-05-04 04:04:11.466 [http-nio-8080-exec-8] INFO  c.h.m.config.RequestLoggingFilter - [PUT] /api/v1/bookings/2/status - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 40ms - Status: 200
+2026-05-04 04:04:11.488 [http-nio-8080-exec-1] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 16ms - Status: 200
+2026-05-04 04:04:11.489 [http-nio-8080-exec-10] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 17ms - Status: 200
+2026-05-04 04:04:22.031 [http-nio-8080-exec-3] INFO  c.h.m.controller.AuthController - Login success - username: khachhang01, IP: 0:0:0:0:0:0:0:1
+2026-05-04 04:04:22.032 [http-nio-8080-exec-3] INFO  c.h.m.config.RequestLoggingFilter - [POST] /api/v1/auth/login - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 341ms - Status: 200
+2026-05-04 04:04:22.098 [http-nio-8080-exec-6] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/banner/hero.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 4ms - Status: 200
+2026-05-04 04:04:22.108 [http-nio-8080-exec-7] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/services/spa.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 3ms - Status: 200
+2026-05-04 04:04:22.120 [http-nio-8080-exec-5] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/services/pool.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 5ms - Status: 200
+2026-05-04 04:04:22.120 [http-nio-8080-exec-4] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/services/restaurant.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 5ms - Status: 200
+2026-05-04 04:04:22.126 [http-nio-8080-exec-4] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/services/airport.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 5ms - Status: 200
+2026-05-04 04:04:22.129 [http-nio-8080-exec-2] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/services - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 23ms - Status: 200
+2026-05-04 04:04:22.143 [http-nio-8080-exec-9] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 38ms - Status: 200
+2026-05-04 04:04:22.148 [http-nio-8080-exec-1] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/services - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 17ms - Status: 200
+2026-05-04 04:04:22.170 [http-nio-8080-exec-10] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/rooms - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 26ms - Status: 200
+2026-05-04 04:04:22.177 [http-nio-8080-exec-3] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/services/pool.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 5ms - Status: 200
+2026-05-04 04:04:22.178 [http-nio-8080-exec-6] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/services/gym.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 3ms - Status: 200
+2026-05-04 04:04:22.182 [http-nio-8080-exec-7] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/services/laundry.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 5ms - Status: 200
+2026-05-04 04:04:22.188 [http-nio-8080-exec-5] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/7/c5d422e7-f56a-41ba-87e7-c51370562519.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 4ms - Status: 200
+2026-05-04 04:04:22.213 [http-nio-8080-exec-2] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/4/f4bf6089-c008-4065-abf9-ad8af531c1e7.png - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 3ms - Status: 200
+2026-05-04 04:04:22.214 [http-nio-8080-exec-4] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/5/8ac6d2da-316e-4eaf-ab36-4e5c42bfa20d.png - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 3ms - Status: 200
+2026-05-04 04:04:22.215 [http-nio-8080-exec-8] INFO  c.h.m.config.RequestLoggingFilter - [GET] /uploads/rooms/3/5b164591-a960-4c94-a6fa-4a0597932e01.jpg - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 5ms - Status: 200
+2026-05-04 04:04:23.690 [http-nio-8080-exec-9] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 18ms - Status: 200
+2026-05-04 04:04:23.710 [http-nio-8080-exec-1] INFO  c.h.m.config.RequestLoggingFilter - [GET] /api/v1/bookings - IP: 0:0:0:0:0:0:0:1 - User: anonymous - 19ms - Status: 200
