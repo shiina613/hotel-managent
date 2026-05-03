@@ -3,6 +3,8 @@ import userApi from '../../api/userApi';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { toast } from '../../components/ui/Toast';
+import Pagination from '../../components/ui/Pagination';
+import TableSkeleton from '../../components/ui/TableSkeleton';
 
 const ROLES = { ADMIN: 'Admin', RECEPTIONIST: 'Lễ tân', CUSTOMER: 'Khách hàng' };
 const ROLE_BADGE = { ADMIN: 'badge-danger', RECEPTIONIST: 'badge-primary', CUSTOMER: 'badge-info' };
@@ -13,6 +15,9 @@ const EMPTY_FORM = { username: '', password: '', fullName: '', email: '', phone:
 
 export default function UsersPage() {
   const [rows, setRows] = useState([]);
+  const [pagination, setPagination] = useState({ currentPage: 0, totalPages: 0, totalElements: 0, pageSize: 10 });
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(10);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterRole, setFilterRole] = useState('');
@@ -23,11 +28,26 @@ export default function UsersPage() {
   const [err, setErr] = useState('');
   const [confirm, setConfirm] = useState({ open: false, id: null });
 
-  const load = () => {
+  const load = (page = currentPage) => {
     setLoading(true);
-    userApi.getUsers().then(r => setRows(r?.data || [])).finally(() => setLoading(false));
+    userApi.getUsers({ page, size: pageSize }).then(r => {
+      const data = r?.data;
+      // Handle both PageResponse and plain array
+      if (data && typeof data === 'object' && 'content' in data) {
+        setRows(data.content || []);
+        setPagination({
+          currentPage: data.currentPage ?? page,
+          totalPages: data.totalPages ?? 1,
+          totalElements: data.totalElements ?? 0,
+          pageSize: data.pageSize ?? pageSize,
+        });
+      } else {
+        setRows(Array.isArray(data) ? data : []);
+        setPagination({ currentPage: 0, totalPages: 1, totalElements: Array.isArray(data) ? data.length : 0, pageSize });
+      }
+    }).finally(() => setLoading(false));
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(currentPage); }, [currentPage]);
 
   const filtered = rows.filter(r => {
     const ms = !search || r.username?.toLowerCase().includes(search.toLowerCase())
@@ -55,14 +75,14 @@ export default function UsersPage() {
         const payload = { fullName: form.fullName, email: form.email, phone: form.phone, role: form.role, status: form.status };
         await userApi.updateUser(modal.data.id, payload);
       }
-      setModal({ open: false }); load(); toast.success('Lưu thành công');
-    } catch (e) { setErr(typeof e === 'string' ? e : 'Lưu thất bại'); }
+      setModal({ open: false }); load(currentPage); toast.success('Lưu thành công');
+    } catch (e) { setErr((e && typeof e === 'object' && e.message) ? e.message : (typeof e === 'string' ? e : 'Lưu thất bại')); }
     finally { setSaving(false); }
   };
 
   const del = async () => {
-    try { await userApi.deleteUser(confirm.id); load(); toast.success('Đã xóa tài khoản'); }
-    catch (e) { toast.error(typeof e === 'string' ? e : 'Xóa thất bại'); }
+    try { await userApi.deleteUser(confirm.id); load(currentPage); toast.success('Đã xóa tài khoản'); }
+    catch (e) { toast.error((e && typeof e === 'object' && e.message) ? e.message : (typeof e === 'string' ? e : 'Xóa thất bại')); }
     finally { setConfirm({ open: false, id: null }); }
   };
 
@@ -71,7 +91,7 @@ export default function UsersPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Quản lý tài khoản</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{rows.length} tài khoản</p>
+          <p className="text-sm text-gray-500 mt-0.5">{pagination.totalElements} tài khoản</p>
         </div>
         <button onClick={openAdd} className="btn-primary flex items-center gap-2">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,7 +121,7 @@ export default function UsersPage() {
       {/* Table */}
       <div className="card overflow-hidden">
         {loading
-          ? <div className="py-16 text-center text-gray-400 text-sm">Đang tải...</div>
+          ? <TableSkeleton rows={pageSize} cols={7} />
           : filtered.length === 0
             ? <div className="py-16 text-center text-gray-400 text-sm">Không có dữ liệu</div>
             : (
@@ -158,6 +178,14 @@ export default function UsersPage() {
             )
         }
       </div>
+
+      <Pagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalElements={pagination.totalElements}
+        pageSize={pagination.pageSize}
+        onPageChange={(p) => setCurrentPage(p)}
+      />
 
       {/* Modal */}
       <Modal open={modal.open} onClose={() => setModal({ open: false })}

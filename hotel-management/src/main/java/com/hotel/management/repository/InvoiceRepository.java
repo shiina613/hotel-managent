@@ -3,6 +3,8 @@ package com.hotel.management.repository;
 import com.hotel.management.entity.Invoice;
 import com.hotel.management.enums.InvoiceStatus;
 import com.hotel.management.enums.PaymentMethod;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -40,6 +42,21 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Integer> {
                                  @Param("startDate") LocalDateTime startDate,
                                  @Param("endDate") LocalDateTime endDate);
 
+    @Query("SELECT i FROM Invoice i WHERE " +
+           "(:userId IS NULL OR i.booking.user.id = :userId) AND " +
+           "(:bookingId IS NULL OR i.booking.id = :bookingId) AND " +
+           "(:status IS NULL OR i.status = :status) AND " +
+           "(:payMethod IS NULL OR i.payMethod = :payMethod) AND " +
+           "(:startDate IS NULL OR i.createAt >= :startDate) AND " +
+           "(:endDate IS NULL OR i.createAt <= :endDate)")
+    Page<Invoice> filterInvoices(@Param("userId") Integer userId,
+                                 @Param("bookingId") Integer bookingId,
+                                 @Param("status") InvoiceStatus status,
+                                 @Param("payMethod") PaymentMethod payMethod,
+                                 @Param("startDate") LocalDateTime startDate,
+                                 @Param("endDate") LocalDateTime endDate,
+                                 Pageable pageable);
+
     @Query("SELECT i FROM Invoice i WHERE i.status = :status ORDER BY i.createAt DESC")
     List<Invoice> findRecentInvoices(@Param("status") InvoiceStatus status);
 
@@ -57,4 +74,46 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Integer> {
 
     @Query("SELECT i FROM Invoice i WHERE i.booking.user.id = :userId ORDER BY i.createAt DESC")
     List<Invoice> findInvoicesByUserId(@Param("userId") Integer userId);
+
+    /**
+     * Get daily revenue from PAID invoices within the given date range.
+     * Returns Object[] with [date (String), revenue (Long)].
+     */
+    @Query("""
+        SELECT FUNCTION('DATE', i.createAt) as date, SUM(i.totalPrice) as revenue
+        FROM Invoice i
+        WHERE i.status = com.hotel.management.enums.InvoiceStatus.PAID
+        AND i.createAt >= :from
+        GROUP BY FUNCTION('DATE', i.createAt)
+        ORDER BY FUNCTION('DATE', i.createAt) ASC
+    """)
+    List<Object[]> getDailyRevenue(@Param("from") LocalDateTime from);
+
+    /**
+     * Get monthly revenue from PAID invoices within the given date range.
+     * Returns Object[] with [year (Integer), month (Integer), revenue (Long)].
+     */
+    @Query("""
+        SELECT FUNCTION('YEAR', i.createAt) as year,
+               FUNCTION('MONTH', i.createAt) as month,
+               SUM(i.totalPrice) as revenue
+        FROM Invoice i
+        WHERE i.status = com.hotel.management.enums.InvoiceStatus.PAID
+        AND i.createAt >= :from
+        GROUP BY FUNCTION('YEAR', i.createAt), FUNCTION('MONTH', i.createAt)
+        ORDER BY FUNCTION('YEAR', i.createAt) ASC, FUNCTION('MONTH', i.createAt) ASC
+    """)
+    List<Object[]> getMonthlyRevenue(@Param("from") LocalDateTime from);
+
+    /**
+     * Get total revenue from PAID invoices in the current month.
+     */
+    @Query("""
+        SELECT COALESCE(SUM(i.totalPrice), 0)
+        FROM Invoice i
+        WHERE i.status = com.hotel.management.enums.InvoiceStatus.PAID
+        AND i.createAt >= :from
+        AND i.createAt < :to
+    """)
+    Long getRevenueThisMonth(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 }

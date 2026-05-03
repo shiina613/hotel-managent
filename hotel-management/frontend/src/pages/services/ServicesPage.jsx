@@ -4,6 +4,8 @@ import axiosClient from '../../api/axiosClient';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { toast } from '../../components/ui/Toast';
+import Pagination from '../../components/ui/Pagination';
+import TableSkeleton from '../../components/ui/TableSkeleton';
 
 // Đơn vị mặc định — có thể thêm tự do
 const DEFAULT_UNITS = ['Cái/Lần', 'Giờ', 'Ngày', 'Đêm', 'Người', 'Chai', 'Đĩa', 'Bộ'];
@@ -11,6 +13,9 @@ const DEFAULT_UNITS = ['Cái/Lần', 'Giờ', 'Ngày', 'Đêm', 'Người', 'Cha
 export default function ServicesPage() {
   const [rows, setRows] = useState([]);
   const [units, setUnits] = useState(DEFAULT_UNITS);
+  const [pagination, setPagination] = useState({ currentPage: 0, totalPages: 0, totalElements: 0, pageSize: 10 });
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(10);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [modal, setModal] = useState({ open: false, mode: 'add', data: null });
@@ -20,9 +25,23 @@ export default function ServicesPage() {
   const [err, setErr] = useState('');
   const [confirm, setConfirm] = useState({ open: false, id: null });
 
-  const load = () => {
+  const load = (page = currentPage) => {
     setLoading(true);
-    serviceApi.getServices().then(r => setRows(r?.data || [])).finally(() => setLoading(false));
+    serviceApi.getServices({ page, size: pageSize }).then(r => {
+      const data = r?.data;
+      if (data && typeof data === 'object' && 'content' in data) {
+        setRows(data.content || []);
+        setPagination({
+          currentPage: data.currentPage ?? page,
+          totalPages: data.totalPages ?? 1,
+          totalElements: data.totalElements ?? 0,
+          pageSize: data.pageSize ?? pageSize,
+        });
+      } else {
+        setRows(Array.isArray(data) ? data : []);
+        setPagination({ currentPage: 0, totalPages: 1, totalElements: Array.isArray(data) ? data.length : 0, pageSize });
+      }
+    }).finally(() => setLoading(false));
     // Load existing units from DB
     axiosClient.get('/services/units').then(r => {
       const dbUnits = r?.data || [];
@@ -30,18 +49,18 @@ export default function ServicesPage() {
       setUnits(merged);
     }).catch(() => {});
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(currentPage); }, [currentPage]);
 
   const filtered = rows.filter(r => !search || r.name?.toLowerCase().includes(search.toLowerCase()));
 
   const openAdd = () => {
-    setForm({ name: '', price: '', unit: 'Cái/Lần', customUnit: '', isActive: true });
+    setForm({ name: '', price: '', unit: 'Cái/Lần', customUnit: '', isActive: true, imageUrl: '' });
     setUseCustomUnit(false); setErr('');
     setModal({ open: true, mode: 'add' });
   };
   const openEdit = (r) => {
     const isCustom = !DEFAULT_UNITS.includes(r.unit);
-    setForm({ name: r.name, price: r.price, unit: isCustom ? '' : r.unit, customUnit: isCustom ? r.unit : '', isActive: r.isActive });
+    setForm({ name: r.name, price: r.price, unit: isCustom ? '' : r.unit, customUnit: isCustom ? r.unit : '', isActive: r.isActive, imageUrl: r.imageUrl || '' });
     setUseCustomUnit(isCustom); setErr('');
     setModal({ open: true, mode: 'edit', data: r });
   };
@@ -53,17 +72,17 @@ export default function ServicesPage() {
     if (!form.name || !form.price || !unit) { setErr('Vui lòng điền đầy đủ thông tin bắt buộc'); return; }
     setSaving(true); setErr('');
     try {
-      const p = { name: form.name, price: +form.price, unit, isActive: form.isActive };
+      const p = { name: form.name, price: +form.price, unit, isActive: form.isActive, imageUrl: form.imageUrl || null };
       if (modal.mode === 'add') await serviceApi.createService(p);
       else await serviceApi.updateService(modal.data.id, p);
-      setModal({ open: false }); load(); toast.success('Lưu thành công');
-    } catch (e) { setErr(typeof e === 'string' ? e : 'Lưu thất bại'); }
+      setModal({ open: false }); load(currentPage); toast.success('Lưu thành công');
+    } catch (e) { setErr((e && typeof e === 'object' && e.message) ? e.message : (typeof e === 'string' ? e : 'Lưu thất bại')); }
     finally { setSaving(false); }
   };
 
   const del = async () => {
-    try { await serviceApi.deleteService(confirm.id); load(); toast.success('Đã xóa dịch vụ'); }
-    catch (e) { toast.error(typeof e === 'string' ? e : 'Xóa thất bại'); }
+    try { await serviceApi.deleteService(confirm.id); load(currentPage); toast.success('Đã xóa dịch vụ'); }
+    catch (e) { toast.error((e && typeof e === 'object' && e.message) ? e.message : (typeof e === 'string' ? e : 'Xóa thất bại')); }
     finally { setConfirm({ open: false, id: null }); }
   };
 
@@ -74,7 +93,7 @@ export default function ServicesPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Quản lý dịch vụ</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{rows.length} dịch vụ</p>
+          <p className="text-sm text-gray-500 mt-0.5">{pagination.totalElements} dịch vụ</p>
         </div>
         <button onClick={openAdd} className="btn-primary flex items-center gap-2">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,19 +109,25 @@ export default function ServicesPage() {
       </div>
 
       <div className="card overflow-hidden">
-        {loading ? <div className="py-16 text-center text-gray-400 text-sm">Đang tải...</div>
+        {loading ? <TableSkeleton rows={pageSize} cols={5} />
           : filtered.length === 0 ? <div className="py-16 text-center text-gray-400 text-sm">Không có dữ liệu</div>
           : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b border-gray-100">
-                  <tr>{['Tên dịch vụ','Giá','Đơn vị','Trạng thái',''].map(h => (
+                  <tr>{['Ảnh','Tên dịch vụ','Giá','Đơn vị','Trạng thái',''].map(h => (
                     <th key={h} className="text-left px-5 py-3 text-xs font-medium text-gray-500 uppercase">{h}</th>
                   ))}</tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {filtered.map(r => (
                     <tr key={r.id} className="hover:bg-gray-50">
+                      <td className="px-5 py-3">
+                        {r.imageUrl
+                          ? <img src={r.imageUrl} alt={r.name} className="w-12 h-10 object-cover rounded-lg" onError={e => { e.target.style.display='none'; }} />
+                          : <div className="w-12 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-300 text-xs">N/A</div>
+                        }
+                      </td>
                       <td className="px-5 py-3 font-medium text-gray-900">{r.name}</td>
                       <td className="px-5 py-3 font-medium text-gray-900">{fmt(r.price)}</td>
                       <td className="px-5 py-3 text-gray-600">{r.unit}</td>
@@ -129,6 +154,14 @@ export default function ServicesPage() {
           )
         }
       </div>
+
+      <Pagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalElements={pagination.totalElements}
+        pageSize={pagination.pageSize}
+        onPageChange={(p) => setCurrentPage(p)}
+      />
 
       <Modal open={modal.open} onClose={() => setModal({ open: false })}
         title={modal.mode === 'add' ? 'Thêm dịch vụ' : 'Chỉnh sửa dịch vụ'} size="sm">
@@ -166,6 +199,25 @@ export default function ServicesPage() {
               className="w-4 h-4 text-primary-500 rounded border-gray-300 focus:ring-primary-500" />
             <span className="text-sm font-medium text-gray-700">Đang hoạt động</span>
           </label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Ảnh dịch vụ</label>
+            <input type="file" accept="image/*"
+              onChange={async e => {
+                const file = e.target.files[0];
+                if (!file || modal.mode !== 'edit') return;
+                try {
+                  const res = await serviceApi.uploadImage(modal.data.id, file);
+                  setForm(p => ({ ...p, imageUrl: res?.data?.imageUrl || p.imageUrl }));
+                  toast.success('Tải ảnh thành công');
+                } catch { toast.error('Tải ảnh thất bại'); }
+              }}
+              className="block w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-600 hover:file:bg-primary-100 cursor-pointer" />
+            {modal.mode === 'add' && <p className="text-xs text-gray-400 mt-1">Lưu dịch vụ trước, sau đó mở lại để tải ảnh.</p>}
+            {form.imageUrl && (
+              <img src={form.imageUrl} alt="preview" className="mt-2 h-20 rounded-lg object-cover border border-gray-100"
+                onError={e => { e.target.style.display='none'; }} />
+            )}
+          </div>
         </div>
         <div className="flex gap-3 mt-6">
           <button onClick={() => setModal({ open: false })} className="btn-ghost flex-1">Hủy</button>

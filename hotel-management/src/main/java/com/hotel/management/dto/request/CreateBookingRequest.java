@@ -1,6 +1,7 @@
 package com.hotel.management.dto.request;
 
 import com.hotel.management.enums.BookingStatus;
+import com.hotel.management.validation.ValidBookingDates;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ValidBookingDates
 public class CreateBookingRequest {
 
     @NotNull(message = "User ID is required")

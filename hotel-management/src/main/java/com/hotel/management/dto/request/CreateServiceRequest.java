@@ -27,4 +27,7 @@ public class CreateServiceRequest {
 
     @NotNull(message = "Active status is required")
     private Boolean isActive;
+
+    @Size(max = 500)
+    private String imageUrl;
 }

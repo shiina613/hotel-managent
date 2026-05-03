@@ -2,6 +2,8 @@ package com.hotel.management.repository;
 
 import com.hotel.management.entity.Room;
 import com.hotel.management.enums.RoomStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -23,6 +25,8 @@ public interface RoomRepository extends JpaRepository<Room, Integer> {
 
     List<Room> findByStatusAndRoomTypeId(RoomStatus status, Integer roomTypeId);
 
+    Page<Room> findByStatus(RoomStatus status, Pageable pageable);
+
     @Query("SELECT r FROM Room r WHERE r.status = :status ORDER BY r.createAt DESC")
     List<Room> findAvailableRooms(@Param("status") RoomStatus status);
 
@@ -36,6 +40,15 @@ public interface RoomRepository extends JpaRepository<Room, Integer> {
     List<Room> filterRooms(@Param("status") RoomStatus status,
                            @Param("roomTypeId") Integer roomTypeId,
                            @Param("keyword") String keyword);
+
+    @Query("SELECT r FROM Room r WHERE " +
+           "(:status IS NULL OR r.status = :status) AND " +
+           "(:roomTypeId IS NULL OR r.roomType.id = :roomTypeId) AND " +
+           "(:keyword IS NULL OR r.roomNumber LIKE %:keyword% OR r.description LIKE %:keyword%)")
+    Page<Room> filterRooms(@Param("status") RoomStatus status,
+                           @Param("roomTypeId") Integer roomTypeId,
+                           @Param("keyword") String keyword,
+                           Pageable pageable);
 
     @Query("SELECT r FROM Room r WHERE r.capacity >= :capacity AND r.status = :status")
     List<Room> findAvailableRoomsByCapacity(@Param("capacity") Integer capacity, @Param("status") RoomStatus status);

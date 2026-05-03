@@ -1,11 +1,13 @@
 package com.hotel.management.service.impl;
 
 import com.hotel.management.dto.RoomTypeDTO;
+import com.hotel.management.dto.response.PageResponse;
 import com.hotel.management.entity.RoomType;
 import com.hotel.management.exception.ResourceNotFoundException;
 import com.hotel.management.repository.RoomTypeRepository;
 import com.hotel.management.service.RoomTypeService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,12 +49,11 @@ public class RoomTypeServiceImpl implements RoomTypeService {
     public void deleteRoomType(Integer id) {
         RoomType roomType = roomTypeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("RoomType not found with id: " + id));
-        
-        // Check if there are rooms associated with this room type
+
         if (!roomType.getRooms().isEmpty()) {
             throw new RuntimeException("Cannot delete room type with associated rooms");
         }
-        
+
         roomTypeRepository.delete(roomType);
     }
 
@@ -82,6 +83,18 @@ public class RoomTypeServiceImpl implements RoomTypeService {
         return roomTypeRepository.searchByName(keyword).stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<RoomTypeDTO> getAllRoomTypes(Pageable pageable) {
+        return PageResponse.from(roomTypeRepository.findAll(pageable).map(this::mapToDTO));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<RoomTypeDTO> searchRoomTypes(String keyword, Pageable pageable) {
+        return PageResponse.from(roomTypeRepository.searchByName(keyword, pageable).map(this::mapToDTO));
     }
 
     @Override

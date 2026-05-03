@@ -2,18 +2,42 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import authApi from '../../api/authApi';
 
+function validate(form) {
+  const errors = {};
+  if (!form.username.trim()) errors.username = 'Tên đăng nhập không được để trống';
+  if (!form.password) errors.password = 'Mật khẩu không được để trống';
+  return errors;
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ username: '', password: '' });
+  const [touched, setTouched] = useState({ username: false, password: false });
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPw, setShowPw] = useState(false);
 
-  const onChange = (e) => { setForm(p => ({ ...p, [e.target.name]: e.target.value })); setError(''); };
+  const validationErrors = validate(form);
+  // Merge inline validation errors with API field errors (API errors take precedence when set)
+  const errors = { ...validationErrors, ...fieldErrors };
+
+  const onChange = (e) => {
+    setForm(p => ({ ...p, [e.target.name]: e.target.value }));
+    setError('');
+    // Clear the specific field error when user starts typing
+    if (fieldErrors[e.target.name]) {
+      setFieldErrors(p => { const next = { ...p }; delete next[e.target.name]; return next; });
+    }
+  };
+  const onBlur = (e) => { setTouched(p => ({ ...p, [e.target.name]: true })); };
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (!form.username || !form.password) { setError('Vui lòng nhập đầy đủ thông tin'); return; }
+    // Mark all fields as touched to show all errors
+    setTouched({ username: true, password: true });
+    if (Object.keys(validationErrors).length > 0) return;
+
     setLoading(true);
     const res = await authApi.login(form);
     setLoading(false);
@@ -25,7 +49,19 @@ export default function LoginPage() {
       else if (role === 'RECEPTIONIST') navigate('/receptionist');
       else navigate('/home'); // CUSTOMER, GUEST
     } else {
-      setError(res.message);
+      // Handle API field errors (ValidationErrorResponse)
+      if (res.fieldErrors && Array.isArray(res.fieldErrors) && res.fieldErrors.length > 0) {
+        const apiFieldErrors = res.fieldErrors.reduce((acc, { field, message }) => {
+          acc[field] = message;
+          return acc;
+        }, {});
+        setFieldErrors(apiFieldErrors);
+        // Mark touched for all fields that have errors
+        const touchedFields = res.fieldErrors.reduce((acc, { field }) => { acc[field] = true; return acc; }, {});
+        setTouched(p => ({ ...p, ...touchedFields }));
+      } else {
+        setError(res.message);
+      }
     }
   };
 
@@ -63,14 +99,33 @@ export default function LoginPage() {
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Tên đăng nhập</label>
-              <input name="username" value={form.username} onChange={onChange}
-                placeholder="Nhập tên đăng nhập" className="input-field" disabled={loading} autoFocus />
+              <input
+                name="username"
+                value={form.username}
+                onChange={onChange}
+                onBlur={onBlur}
+                placeholder="Nhập tên đăng nhập"
+                className={`input-field ${touched.username && errors.username ? 'border-red-400 focus:ring-red-400' : ''}`}
+                disabled={loading}
+                autoFocus
+              />
+              {touched.username && errors.username && (
+                <p className="text-red-500 text-sm mt-1">{errors.username}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Mật khẩu</label>
               <div className="relative">
-                <input name="password" type={showPw ? 'text' : 'password'} value={form.password} onChange={onChange}
-                  placeholder="Nhập mật khẩu" className="input-field pr-10" disabled={loading} />
+                <input
+                  name="password"
+                  type={showPw ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={onChange}
+                  onBlur={onBlur}
+                  placeholder="Nhập mật khẩu"
+                  className={`input-field pr-10 ${touched.password && errors.password ? 'border-red-400 focus:ring-red-400' : ''}`}
+                  disabled={loading}
+                />
                 <button type="button" onClick={() => setShowPw(p => !p)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                   {showPw
@@ -79,6 +134,9 @@ export default function LoginPage() {
                   }
                 </button>
               </div>
+              {touched.password && errors.password && (
+                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+              )}
             </div>
             <div className="flex justify-end">
               <Link to="/forgot-password" className="text-sm text-primary-500 hover:text-primary-600">Quên mật khẩu?</Link>
@@ -115,4 +173,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

@@ -1,9 +1,11 @@
 package com.hotel.management.service.impl;
 
 import com.hotel.management.dto.ServiceDTO;
+import com.hotel.management.dto.response.PageResponse;
 import com.hotel.management.repository.ServiceRepository;
 import com.hotel.management.service.HotelService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +27,7 @@ public class HotelServiceImpl implements HotelService {
                 .price(serviceDTO.getPrice())
                 .unit(serviceDTO.getUnit())
                 .isActive(serviceDTO.getIsActive())
+                .imageUrl(serviceDTO.getImageUrl())
                 .build();
         return mapToDTO(serviceRepository.save(service));
     }
@@ -37,6 +40,7 @@ public class HotelServiceImpl implements HotelService {
         service.setPrice(serviceDTO.getPrice());
         service.setUnit(serviceDTO.getUnit());
         service.setIsActive(serviceDTO.getIsActive());
+        service.setImageUrl(serviceDTO.getImageUrl());
         return mapToDTO(serviceRepository.save(service));
     }
 
@@ -91,6 +95,18 @@ public class HotelServiceImpl implements HotelService {
 
     @Override
     @Transactional(readOnly = true)
+    public PageResponse<ServiceDTO> getAllServices(Pageable pageable) {
+        return PageResponse.from(serviceRepository.findAll(pageable).map(this::mapToDTO));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<ServiceDTO> filterServices(Boolean active, String unit, String keyword, Pageable pageable) {
+        return PageResponse.from(serviceRepository.filterServices(active, unit, keyword, pageable).map(this::mapToDTO));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public boolean existsByName(String name) {
         return serviceRepository.existsByName(name);
     }
@@ -102,6 +118,7 @@ public class HotelServiceImpl implements HotelService {
                 .price(service.getPrice())
                 .unit(service.getUnit())
                 .isActive(service.getIsActive())
+                .imageUrl(service.getImageUrl())
                 .createAt(service.getCreateAt())
                 .updateAt(service.getUpdateAt())
                 .build();

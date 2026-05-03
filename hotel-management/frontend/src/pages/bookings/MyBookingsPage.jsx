@@ -33,7 +33,14 @@ export default function MyBookingsPage() {
   const load = () => {
     setLoading(true);
     bookingApi.getBookings({ userId: user?.userId })
-      .then(r => setBookings(r?.data || []))
+      .then(r => {
+        const data = r?.data;
+        if (data && typeof data === 'object' && 'content' in data) {
+          setBookings(data.content || []);
+        } else {
+          setBookings(Array.isArray(data) ? data : []);
+        }
+      })
       .catch(() => setBookings([]))
       .finally(() => setLoading(false));
   };

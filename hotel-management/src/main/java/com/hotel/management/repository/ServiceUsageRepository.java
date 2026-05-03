@@ -1,6 +1,7 @@
 package com.hotel.management.repository;
 
 import com.hotel.management.entity.ServiceUsage;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -30,4 +31,16 @@ public interface ServiceUsageRepository extends JpaRepository<ServiceUsage, Inte
 
     @Query("SELECT COUNT(su) FROM ServiceUsage su WHERE su.service.id = :serviceId")
     long countByServiceId(@Param("serviceId") Integer serviceId);
+
+    /**
+     * Get top N services by total quantity and revenue.
+     * Returns Object[] with [serviceId (Integer), serviceName (String), totalQuantity (Long), totalRevenue (Long)].
+     */
+    @Query("""
+        SELECT su.service.id, su.service.name, SUM(su.quantity), SUM(su.totalPrice)
+        FROM ServiceUsage su
+        GROUP BY su.service.id, su.service.name
+        ORDER BY SUM(su.quantity) DESC
+    """)
+    List<Object[]> getTopServicesByQuantity(Pageable pageable);
 }

@@ -15,6 +15,7 @@ import RoomDetailPage from './pages/RoomDetailPage';
 import MyBookingsPage from './pages/bookings/MyBookingsPage';
 import ProtectedRoute from './routes/ProtectedRoute';
 import AdminLayout from './components/layout/AdminLayout';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 import authApi from './api/authApi';
 
 const RootRedirect = () => {
@@ -38,62 +39,92 @@ const LoginRoute = () => {
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<RootRedirect />} />
-        <Route path="/login" element={<LoginRoute />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <ErrorBoundary>
+        <Routes>
+          <Route path="/" element={<RootRedirect />} />
+          <Route path="/login" element={<LoginRoute />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
-        {/* Customer */}
-        <Route path="/home" element={
-          <ProtectedRoute requiredRole="CUSTOMER"><HomePage /></ProtectedRoute>
-        } />
-        <Route path="/room/:id" element={
-          <ProtectedRoute requiredRole="CUSTOMER"><RoomDetailPage /></ProtectedRoute>
-        } />
-        <Route path="/my-bookings" element={
-          <ProtectedRoute requiredRole="CUSTOMER"><MyBookingsPage /></ProtectedRoute>
-        } />
+          {/* Customer */}
+          <Route path="/home" element={
+            <ErrorBoundary>
+              <ProtectedRoute requiredRole="CUSTOMER"><HomePage /></ProtectedRoute>
+            </ErrorBoundary>
+          } />
+          <Route path="/room/:id" element={
+            <ErrorBoundary>
+              <ProtectedRoute requiredRole="CUSTOMER"><RoomDetailPage /></ProtectedRoute>
+            </ErrorBoundary>
+          } />
+          <Route path="/my-bookings" element={
+            <ErrorBoundary>
+              <ProtectedRoute requiredRole="CUSTOMER"><MyBookingsPage /></ProtectedRoute>
+            </ErrorBoundary>
+          } />
 
-        {/* Receptionist */}
-        <Route path="/receptionist" element={
-          <ProtectedRoute requiredRole="RECEPTIONIST"><ReceptionistPage /></ProtectedRoute>
-        } />
-        <Route path="/receptionist/rooms" element={
-          <ProtectedRoute requiredRole="RECEPTIONIST"><AdminLayout role="RECEPTIONIST"><RoomsPage /></AdminLayout></ProtectedRoute>
-        } />
-        <Route path="/receptionist/bookings" element={
-          <ProtectedRoute requiredRole="RECEPTIONIST"><AdminLayout role="RECEPTIONIST"><BookingsPage /></AdminLayout></ProtectedRoute>
-        } />
-        <Route path="/receptionist/invoices" element={
-          <ProtectedRoute requiredRole="RECEPTIONIST"><AdminLayout role="RECEPTIONIST"><InvoicesPage /></AdminLayout></ProtectedRoute>
-        } />
+          {/* Receptionist */}
+          <Route path="/receptionist" element={
+            <ErrorBoundary>
+              <ProtectedRoute requiredRole="RECEPTIONIST"><ReceptionistPage /></ProtectedRoute>
+            </ErrorBoundary>
+          } />
+          <Route path="/receptionist/rooms" element={
+            <ErrorBoundary>
+              <ProtectedRoute requiredRole="RECEPTIONIST"><AdminLayout role="RECEPTIONIST"><RoomsPage /></AdminLayout></ProtectedRoute>
+            </ErrorBoundary>
+          } />
+          <Route path="/receptionist/bookings" element={
+            <ErrorBoundary>
+              <ProtectedRoute requiredRole="RECEPTIONIST"><AdminLayout role="RECEPTIONIST"><BookingsPage /></AdminLayout></ProtectedRoute>
+            </ErrorBoundary>
+          } />
+          <Route path="/receptionist/invoices" element={
+            <ErrorBoundary>
+              <ProtectedRoute requiredRole="RECEPTIONIST"><AdminLayout role="RECEPTIONIST"><InvoicesPage /></AdminLayout></ProtectedRoute>
+            </ErrorBoundary>
+          } />
 
-        {/* Admin */}
-        <Route path="/dashboard" element={
-          <ProtectedRoute requiredRole="ADMIN"><AdminLayout><DashboardPage /></AdminLayout></ProtectedRoute>
-        } />
-        <Route path="/rooms" element={
-          <ProtectedRoute requiredRole="ADMIN"><AdminLayout><RoomsPage /></AdminLayout></ProtectedRoute>
-        } />
-        <Route path="/room-types" element={
-          <ProtectedRoute requiredRole="ADMIN"><AdminLayout><RoomTypesPage /></AdminLayout></ProtectedRoute>
-        } />
-        <Route path="/services" element={
-          <ProtectedRoute requiredRole="ADMIN"><AdminLayout><ServicesPage /></AdminLayout></ProtectedRoute>
-        } />
-        <Route path="/bookings" element={
-          <ProtectedRoute requiredRole="ADMIN"><AdminLayout><BookingsPage /></AdminLayout></ProtectedRoute>
-        } />
-        <Route path="/invoices" element={
-          <ProtectedRoute requiredRole="ADMIN"><AdminLayout><InvoicesPage /></AdminLayout></ProtectedRoute>
-        } />
-        <Route path="/users" element={
-          <ProtectedRoute requiredRole="ADMIN"><AdminLayout><UsersPage /></AdminLayout></ProtectedRoute>
-        } />
+          {/* Admin */}
+          <Route path="/dashboard" element={
+            <ErrorBoundary>
+              <ProtectedRoute requiredRole="ADMIN"><AdminLayout><DashboardPage /></AdminLayout></ProtectedRoute>
+            </ErrorBoundary>
+          } />
+          <Route path="/rooms" element={
+            <ErrorBoundary>
+              <ProtectedRoute requiredRole="ADMIN"><AdminLayout><RoomsPage /></AdminLayout></ProtectedRoute>
+            </ErrorBoundary>
+          } />
+          <Route path="/room-types" element={
+            <ErrorBoundary>
+              <ProtectedRoute requiredRole="ADMIN"><AdminLayout><RoomTypesPage /></AdminLayout></ProtectedRoute>
+            </ErrorBoundary>
+          } />
+          <Route path="/services" element={
+            <ErrorBoundary>
+              <ProtectedRoute requiredRole="ADMIN"><AdminLayout><ServicesPage /></AdminLayout></ProtectedRoute>
+            </ErrorBoundary>
+          } />
+          <Route path="/bookings" element={
+            <ErrorBoundary>
+              <ProtectedRoute requiredRole="ADMIN"><AdminLayout><BookingsPage /></AdminLayout></ProtectedRoute>
+            </ErrorBoundary>
+          } />
+          <Route path="/invoices" element={
+            <ErrorBoundary>
+              <ProtectedRoute requiredRole="ADMIN"><AdminLayout><InvoicesPage /></AdminLayout></ProtectedRoute>
+            </ErrorBoundary>
+          } />
+          <Route path="/users" element={
+            <ErrorBoundary>
+              <ProtectedRoute requiredRole="ADMIN"><AdminLayout><UsersPage /></AdminLayout></ProtectedRoute>
+            </ErrorBoundary>
+          } />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }

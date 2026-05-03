@@ -1,6 +1,8 @@
 package com.hotel.management.service;
 
 import com.hotel.management.dto.ServiceDTO;
+import com.hotel.management.dto.response.PageResponse;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +28,10 @@ public interface HotelService {
     List<ServiceDTO> searchServices(String keyword);
 
     List<ServiceDTO> filterServices(Boolean active, String unit, String keyword);
+
+    PageResponse<ServiceDTO> getAllServices(Pageable pageable);
+
+    PageResponse<ServiceDTO> filterServices(Boolean active, String unit, String keyword, Pageable pageable);
 
     boolean existsByName(String name);
 }

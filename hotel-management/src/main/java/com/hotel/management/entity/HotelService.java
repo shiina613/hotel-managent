@@ -34,6 +34,9 @@ public class HotelService {
     @Column(nullable = false)
     private Boolean isActive;
 
+    @Column(length = 500)
+    private String imageUrl;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createAt;

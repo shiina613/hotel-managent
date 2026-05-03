@@ -39,7 +39,7 @@ CREATE TABLE `bookings` (
   KEY `FKeyog2oic85xg7hsu2je2lx3s6` (`user_id`),
   CONSTRAINT `FKeyog2oic85xg7hsu2je2lx3s6` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   CONSTRAINT `FKrgoycol97o21kpjodw1qox4nc` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -48,7 +48,7 @@ CREATE TABLE `bookings` (
 
 LOCK TABLES `bookings` WRITE;
 /*!40000 ALTER TABLE `bookings` DISABLE KEYS */;
-INSERT INTO `bookings` VALUES (1,'2026-04-12 18:00:00.000000','2026-04-12 22:00:00.000000','2026-04-12 14:57:28.905119','',750000,'CONFIRMED',125000,'2026-04-12 14:58:36.045993',3,3);
+INSERT INTO `bookings` VALUES (2,'2026-05-04 07:30:00.000000','2026-05-06 11:30:00.000000','2026-05-04 04:03:08.447137','',1500000,'CHECKED_OUT',21000000,'2026-05-04 04:04:11.439259',4,8);
 /*!40000 ALTER TABLE `bookings` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -74,7 +74,7 @@ CREATE TABLE `invoices` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `UKqn380ix1ge287r0rd8th12bwi` (`booking_id`),
   CONSTRAINT `FKb9bhb7xre5v64qvjeholh3qj0` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -83,6 +83,7 @@ CREATE TABLE `invoices` (
 
 LOCK TABLES `invoices` WRITE;
 /*!40000 ALTER TABLE `invoices` DISABLE KEYS */;
+INSERT INTO `invoices` VALUES (1,'2026-05-04 04:04:11.455206','Tự động tạo khi check-out',NULL,'CASH',21000000,0,'PENDING',21000000,'2026-05-04 04:04:11.455206',2);
 /*!40000 ALTER TABLE `invoices` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -196,8 +197,9 @@ CREATE TABLE `services` (
   `price` int NOT NULL,
   `unit` varchar(50) NOT NULL,
   `update_at` datetime(6) NOT NULL,
+  `image_url` varchar(500) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -206,7 +208,7 @@ CREATE TABLE `services` (
 
 LOCK TABLES `services` WRITE;
 /*!40000 ALTER TABLE `services` DISABLE KEYS */;
-INSERT INTO `services` VALUES (1,'2026-04-05 17:56:50.604286',_binary '','Spa',100000,'HOUR','2026-04-05 17:56:50.604286');
+INSERT INTO `services` VALUES (1,'2026-04-05 17:56:50.604286',_binary '','Spa',100000,'Lan','2026-05-04 03:39:46.712019','/uploads/rooms/services/spa.jpg'),(2,'2026-05-04 03:30:04.633862',_binary '','Spa & Wellness',350000,'Lan','2026-05-04 03:39:46.745180','/uploads/rooms/services/spa.jpg'),(5,'2026-05-04 03:39:46.783004',_binary '','Ho boi',100000,'Lan','2026-05-04 03:39:46.783004','/uploads/rooms/services/pool.jpg'),(6,'2026-05-04 03:39:46.837318',_binary '','Nha hang',200000,'Nguoi','2026-05-04 03:39:46.837318','/uploads/rooms/services/restaurant.jpg'),(7,'2026-05-04 03:39:46.873091',_binary '','Dua don san bay',250000,'Lan','2026-05-04 03:39:46.874088','/uploads/rooms/services/airport.jpg'),(8,'2026-05-04 03:39:46.913298',_binary '','Phong gym',80000,'Lan','2026-05-04 03:39:46.913298','/uploads/rooms/services/gym.jpg'),(9,'2026-05-04 03:39:46.956534',_binary '','Giat ui',50000,'Kg','2026-05-04 03:39:46.956534','/uploads/rooms/services/laundry.jpg');
 /*!40000 ALTER TABLE `services` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -228,10 +230,12 @@ CREATE TABLE `users` (
   `status` enum('ACTIVE','DELETED','INACTIVE','SUSPENDED') NOT NULL,
   `update_at` datetime(6) NOT NULL,
   `username` varchar(100) NOT NULL,
+  `security_answer_hash` varchar(255) DEFAULT NULL,
+  `security_question` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UK6dotkott2kjsp8vw4d0m25fb7` (`email`),
   UNIQUE KEY `UKr43af9ap4edm43mmtq01oddj6` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -240,7 +244,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'2026-03-14 04:03:37.572873','admin@hotel.com','Admin User','admin123','1234567890','ADMIN','ACTIVE','2026-03-14 04:03:37.572873','admin001'),(2,'2026-03-14 04:03:37.753892','john.doe@email.com','John Doe','customer123','9876543210','CUSTOMER','ACTIVE','2026-03-14 04:03:37.753892','customer001'),(3,'2026-04-05 16:16:07.155790','tung01@gmail.com','Nguyễn Quang Tùng','tung01','0971871656','CUSTOMER','ACTIVE','2026-04-05 16:16:07.155790','tung01'),(4,'2026-04-05 17:48:22.382225','shiina@gmail.com','shiina','shiina','01234456876','RECEPTIONIST','ACTIVE','2026-04-12 14:36:53.996964','shiina');
+INSERT INTO `users` VALUES (1,'2026-03-14 04:03:37.572873','admin@hotel.com','Admin User','$2a$12$o0lUjZMfLm/v1ERqQ2Ko6uHfVz.CQjy38LCdPNkfnfjMZtwkeqfY.','1234567890','ADMIN','ACTIVE','2026-05-04 03:10:08.461256','admin001',NULL,NULL),(2,'2026-03-14 04:03:37.753892','john.doe@email.com','John Doe','$2a$12$YOVBygQsfcu2nF/YxjQe0OhfjP6Ngab98mombKPUMU0sGhsB7Jy2S','9876543210','CUSTOMER','ACTIVE','2026-05-04 03:10:08.482280','customer001',NULL,NULL),(5,'2026-05-04 03:18:04.681446','minh.tuan@gmail.com','Nguy?n Minh Tu?n','$2a$12$NJADgu3N.5uau6UJ.W5Kh.prB6kQdmtQCVrgEeE8nCpBrVuoAIji2','0912000003','CUSTOMER','ACTIVE','2026-05-04 03:18:04.681446','khachhang03','$2a$12$YNe7el2Xr8IgsWcxsVA0AuaHItZz5NfAY1sRC/bbuWPHlq5VQSTeW','Ten thu cung?'),(6,'2026-05-04 03:19:54.923236','admin2@hotel.com','Nguyen Quan Tri','$2a$12$5gXWYnnDT67oo.4rpenYWOuOlVA30Pfnz/uc7aX0MVaT5ACUPOSAC','0901000001','ADMIN','ACTIVE','2026-05-04 03:19:54.923236','admin2','$2a$12$LuqBtxPmLlCny8m4Afvf9etMNhmnfyfT6q1XnJMWkzgvFl8bj5Bda','Ten truong hoc'),(7,'2026-05-04 03:21:00.424547','letan01@hotel.com','Tran Thi Le Tan','$2a$12$3MY/accsD.9X4sxSRf5vLe6D3KvpLTfD3B4jalXoFInaPBp4hRLvC','0901000002','RECEPTIONIST','ACTIVE','2026-05-04 03:21:00.424547','letan01','$2a$12$kU.O.AONoneNbdA1g.iZReLQDRb7M/LJk/Qex5ybIYfI.mMCV4.Mu','Ten truong hoc'),(8,'2026-05-04 03:21:34.586728','levan.an@gmail.com','Le Van An','$2a$12$T3Bzw9gU4kc7bulT77f9b.lD98OICuaKnlmkM6rqwKkDQFapJ1wP.','0912000001','CUSTOMER','ACTIVE','2026-05-04 03:21:34.586728','khachhang01','$2a$12$DN.VZBCAGqwt44RMS4IKVOTvYzSyHtrL6qlh1.mK1hcmsnKdhiBmu','Ten thu cung'),(9,'2026-05-04 03:21:35.261537','pham.bich@gmail.com','Pham Thi Bich','$2a$12$iJV0Zpk0A2Rhq9WWZH9e7uR49rMYckS4PiWMdkWKzXXY0ABl86C2a','0912000002','CUSTOMER','ACTIVE','2026-05-04 03:21:35.261537','khachhang02','$2a$12$w9ZBYlhydTH/9DkPmZS02e/HBMtkSRq1Swxkg7RYazV9HbVBzcppm','Ten truong hoc'),(10,'2026-05-04 03:21:35.919606','hoang.mai@gmail.com','Hoang Thi Mai','$2a$12$O3wc66/zO.t/4UIa6UTVwONVlQAuxVMPefUcD11hPI7LQ4qY5Fnpq','0912000004','CUSTOMER','ACTIVE','2026-05-04 03:21:35.919606','khachhang04','$2a$12$6XXCi7iLATEcJXyh83w0WunzpVKxyLeaXm2RKlJCoFMX6.N6iA3SG','Thanh pho sinh');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -253,4 +257,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-12 18:40:15
+-- Dump completed on 2026-05-04  4:05:36

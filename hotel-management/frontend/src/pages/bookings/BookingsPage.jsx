@@ -1,16 +1,38 @@
 import { useState, useEffect } from 'react';
 import bookingApi from '../../api/bookingApi';
 import roomApi from '../../api/roomApi';
-import invoiceApi from '../../api/invoiceApi';
 import authApi from '../../api/authApi';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { toast } from '../../components/ui/Toast';
+import Pagination from '../../components/ui/Pagination';
+import TableSkeleton from '../../components/ui/TableSkeleton';
 
 const SL = { PENDING: 'Chờ duyệt', CONFIRMED: 'Đã xác nhận', CHECKED_IN: 'Đang ở', CHECKED_OUT: 'Đã trả phòng', CANCELLED: 'Đã hủy' };
 const SB = { PENDING: 'badge-warning', CONFIRMED: 'badge-info', CHECKED_IN: 'badge-success', CHECKED_OUT: 'badge-gray', CANCELLED: 'badge-danger' };
 const EMPTY = { userId: '', roomId: '', checkInAt: '', checkOutAt: '', roomPrice: '', totalPrice: '', status: 'PENDING', note: '' };
-const PAY_METHODS = { CASH: 'Tiền mặt', CARD: 'Thẻ ngân hàng', TRANSFER: 'Chuyển khoản' };
+const BOOKING_FIELDS = ['roomId', 'checkInAt', 'checkOutAt', 'totalPrice'];
+
+function validateBooking(form) {
+  const errors = {};
+  if (!form.roomId) errors.roomId = 'Vui lòng chọn phòng';
+  if (!form.checkInAt) {
+    errors.checkInAt = 'Vui lòng chọn ngày check-in';
+  } else if (new Date(form.checkInAt) < new Date(new Date().setSeconds(0, 0))) {
+    errors.checkInAt = 'Ngày check-in không thể là ngày trong quá khứ';
+  }
+  if (!form.checkOutAt) {
+    errors.checkOutAt = 'Vui lòng chọn ngày check-out';
+  } else if (form.checkInAt && new Date(form.checkOutAt) <= new Date(form.checkInAt)) {
+    errors.checkOutAt = 'Ngày check-out phải sau ngày check-in';
+  }
+  if (form.totalPrice === '' || form.totalPrice === null || form.totalPrice === undefined) {
+    errors.totalPrice = 'Vui lòng nhập tổng tiền';
+  } else if (Number(form.totalPrice) < 0) {
+    errors.totalPrice = 'Tổng tiền không được âm';
+  }
+  return errors;
+}
 const fmt = (p) => p ? new Intl.NumberFormat('vi-VN').format(p) + ' ₫' : '-';
 const fmtDate = (d) => d ? new Date(d).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
 
@@ -32,29 +54,18 @@ function timeUntil(dateStr) {
 
 // Modal check-out: xác nhận thanh toán và tạo invoice
 function CheckOutModal({ booking, onClose, onSuccess }) {
-  const [payMethod, setPayMethod] = useState('CASH');
-  const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
 
   const handleCheckOut = async () => {
     setSaving(true);
     try {
-      // 1. Tạo invoice
-      await invoiceApi.createInvoice({
-        bookingId: booking.id,
-        roomAmount: booking.totalPrice,
-        serviceAmount: 0,
-        totalPrice: booking.totalPrice,
-        payMethod,
-        status: 'PAID',
-        note,
-      });
-      // 2. Cập nhật trạng thái booking
+      // Gọi PUT /bookings/{id}/status với CHECKED_OUT
+      // Backend tự động tạo Invoice (idempotent) khi chuyển sang CHECKED_OUT
       await bookingApi.updateBookingStatus(booking.id, 'CHECKED_OUT');
       toast.success('Check-out thành công! Hóa đơn đã được tạo.');
       onSuccess();
     } catch (e) {
-      toast.error(typeof e === 'string' ? e : 'Check-out thất bại');
+      toast.error((e && typeof e === 'object' && e.message) ? e.message : (typeof e === 'string' ? e : 'Check-out thất bại'));
     } finally { setSaving(false); }
   };
 
@@ -85,35 +96,17 @@ function CheckOutModal({ booking, onClose, onSuccess }) {
           </div>
         </div>
 
-        {/* Phương thức thanh toán */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Phương thức thanh toán</label>
-          <div className="grid grid-cols-3 gap-2">
-            {Object.entries(PAY_METHODS).map(([k, v]) => (
-              <button key={k} onClick={() => setPayMethod(k)}
-                className={`py-2.5 px-3 rounded-xl border text-sm font-medium transition-colors ${
-                  payMethod === k
-                    ? 'border-primary-500 bg-primary-50 text-primary-600'
-                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                }`}>
-                {v}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Ghi chú (tùy chọn)</label>
-          <textarea value={note} onChange={e => setNote(e.target.value)} rows={2}
-            className="input-field resize-none" placeholder="Ghi chú hóa đơn..." />
-        </div>
+        {/* Phương thức thanh toán sẽ được cập nhật khi thanh toán hóa đơn */}
+        <p className="text-sm text-gray-500 bg-blue-50 border border-blue-100 rounded-lg px-4 py-3">
+          Hóa đơn sẽ được tạo tự động. Phương thức thanh toán có thể cập nhật trong mục Hóa đơn.
+        </p>
       </div>
 
       <div className="flex gap-3 mt-6">
         <button onClick={onClose} className="btn-ghost flex-1">Hủy</button>
         <button onClick={handleCheckOut} disabled={saving}
           className="flex-1 py-2.5 bg-primary-500 text-white rounded-xl font-semibold hover:bg-primary-600 disabled:opacity-50 transition-colors">
-          {saving ? 'Đang xử lý...' : `Xác nhận thanh toán ${fmt(booking.totalPrice)}`}
+          {saving ? 'Đang xử lý...' : `Xác nhận check-out ${fmt(booking.totalPrice)}`}
         </button>
       </div>
     </Modal>
@@ -126,57 +119,108 @@ export default function BookingsPage() {
 
   const [rows, setRows] = useState([]);
   const [rooms, setRooms] = useState([]);
+  const [pagination, setPagination] = useState({ currentPage: 0, totalPages: 0, totalElements: 0, pageSize: 10 });
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(10);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState(isReceptionist ? 'PENDING' : '');
   const [modal, setModal] = useState({ open: false, mode: 'add', data: null });
   const [checkOutModal, setCheckOutModal] = useState(null); // booking object
   const [form, setForm] = useState(EMPTY);
+  const [formTouched, setFormTouched] = useState({});
+  const [formFieldErrors, setFormFieldErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
   const [confirm, setConfirm] = useState({ open: false, id: null });
 
-  const load = () => {
+  const load = (page = currentPage) => {
     setLoading(true);
-    Promise.all([bookingApi.getBookings(), roomApi.getRooms()])
-      .then(([b, r]) => { setRows(b?.data || []); setRooms(r?.data || []); })
+    Promise.all([bookingApi.getBookings({ page, size: pageSize }), roomApi.getRooms()])
+      .then(([b, r]) => {
+        const data = b?.data;
+        if (data && typeof data === 'object' && 'content' in data) {
+          setRows(data.content || []);
+          setPagination({
+            currentPage: data.currentPage ?? page,
+            totalPages: data.totalPages ?? 1,
+            totalElements: data.totalElements ?? 0,
+            pageSize: data.pageSize ?? pageSize,
+          });
+        } else {
+          setRows(Array.isArray(data) ? data : []);
+          setPagination({ currentPage: 0, totalPages: 1, totalElements: Array.isArray(data) ? data.length : 0, pageSize });
+        }
+        const roomData = r?.data;
+        if (roomData && typeof roomData === 'object' && 'content' in roomData) {
+          setRooms(roomData.content || []);
+        } else {
+          setRooms(Array.isArray(roomData) ? roomData : []);
+        }
+      })
       .finally(() => setLoading(false));
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(currentPage); }, [currentPage]);
 
   const filtered = tab ? rows.filter(r => r.status === tab) : rows;
   const pendingCount = rows.filter(r => r.status === 'PENDING').length;
   const confirmedCount = rows.filter(r => r.status === 'CONFIRMED').length;
   const checkedInCount = rows.filter(r => r.status === 'CHECKED_IN').length;
 
-  const openAdd = () => { setForm(EMPTY); setErr(''); setModal({ open: true, mode: 'add' }); };
+  const openAdd = () => { setForm(EMPTY); setErr(''); setFormTouched({}); setFormFieldErrors({}); setModal({ open: true, mode: 'add' }); };
   const openEdit = (b) => {
     setForm({ userId: b.userId, roomId: b.roomId, checkInAt: b.checkInAt?.slice(0, 16) || '', checkOutAt: b.checkOutAt?.slice(0, 16) || '', roomPrice: b.roomPrice, totalPrice: b.totalPrice, status: b.status, note: b.note || '' });
-    setErr(''); setModal({ open: true, mode: 'edit', data: b });
+    setErr(''); setFormTouched({}); setFormFieldErrors({}); setModal({ open: true, mode: 'edit', data: b });
   };
 
   const save = async () => {
-    if (!form.userId || !form.roomId || !form.checkInAt || !form.checkOutAt) { setErr('Vui lòng điền đầy đủ thông tin bắt buộc'); return; }
+    // Mark all booking fields as touched
+    const allTouched = BOOKING_FIELDS.reduce((acc, f) => ({ ...acc, [f]: true }), {});
+    setFormTouched(allTouched);
+    const validationErrors = validateBooking(form);
+    if (Object.keys(validationErrors).length > 0) return;
+
     setSaving(true); setErr('');
     try {
       const p = { ...form, userId: +form.userId, roomId: +form.roomId, roomPrice: +form.roomPrice, totalPrice: +form.totalPrice };
       if (modal.mode === 'add') await bookingApi.createBooking(p);
       else await bookingApi.updateBooking(modal.data.id, p);
-      setModal({ open: false }); load(); toast.success('Lưu thành công');
-    } catch (e) { setErr(typeof e === 'string' ? e : 'Lưu thất bại'); }
+      setModal({ open: false }); load(currentPage); toast.success('Lưu thành công');
+    } catch (e) {
+      // Handle API field errors (ValidationErrorResponse)
+      if (e && typeof e === 'object' && e.fieldErrors && Array.isArray(e.fieldErrors) && e.fieldErrors.length > 0) {
+        const apiFieldErrors = e.fieldErrors.reduce((acc, { field, message }) => {
+          acc[field] = message;
+          return acc;
+        }, {});
+        setFormFieldErrors(apiFieldErrors);
+        // Mark touched for all fields that have errors
+        const touchedFields = e.fieldErrors.reduce((acc, { field }) => { acc[field] = true; return acc; }, {});
+        setFormTouched(p => ({ ...p, ...touchedFields }));
+      } else {
+        const msg = (e && typeof e === 'object' && e.message) ? e.message : (typeof e === 'string' ? e : 'Lưu thất bại');
+        setErr(msg);
+      }
+    }
     finally { setSaving(false); }
   };
 
   const changeStatus = async (id, status, successMsg) => {
     try {
       await bookingApi.updateBookingStatus(id, status);
-      load();
+      load(currentPage);
       toast.success(successMsg || 'Cập nhật trạng thái thành công');
-    } catch (e) { toast.error(typeof e === 'string' ? e : 'Cập nhật thất bại'); }
+    } catch (e) {
+      const msg = (e && typeof e === 'object' && e.message) ? e.message : (typeof e === 'string' ? e : 'Cập nhật thất bại');
+      toast.error(msg);
+    }
   };
 
   const del = async () => {
-    try { await bookingApi.deleteBooking(confirm.id); load(); toast.success('Đã xóa đặt phòng'); }
-    catch (e) { toast.error(typeof e === 'string' ? e : 'Xóa thất bại'); }
+    try { await bookingApi.deleteBooking(confirm.id); load(currentPage); toast.success('Đã xóa đặt phòng'); }
+    catch (e) {
+      const msg = (e && typeof e === 'object' && e.message) ? e.message : (typeof e === 'string' ? e : 'Xóa thất bại');
+      toast.error(msg);
+    }
     finally { setConfirm({ open: false, id: null }); }
   };
 
@@ -199,7 +243,7 @@ export default function BookingsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Quản lý đặt phòng</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{rows.length} đặt phòng</p>
+          <p className="text-sm text-gray-500 mt-0.5">{pagination.totalElements} đặt phòng</p>
         </div>
         <button onClick={openAdd} className="btn-primary flex items-center gap-2">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
@@ -346,7 +390,7 @@ export default function BookingsPage() {
       {(!isReceptionist || (tab !== 'PENDING' && tab !== 'CONFIRMED' && tab !== 'CHECKED_IN')) && (
         <div className="card overflow-hidden">
           {loading ? (
-            <div className="py-16 text-center text-gray-400 text-sm">Đang tải...</div>
+            <TableSkeleton rows={pageSize} cols={8} />
           ) : filtered.length === 0 ? (
             <div className="py-16 text-center text-gray-400 text-sm">Không có dữ liệu</div>
           ) : (
@@ -395,55 +439,109 @@ export default function BookingsPage() {
         </div>
       )}
 
-      {/* Modal tạo/sửa booking */}
-      <Modal open={modal.open} onClose={() => setModal({ open: false })} title={modal.mode === 'add' ? 'Tạo đặt phòng' : 'Chỉnh sửa đặt phòng'} size="lg">
+      {/* Pagination */}
+      <Pagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalElements={pagination.totalElements}
+        pageSize={pagination.pageSize}
+        onPageChange={(p) => setCurrentPage(p)}
+      />
+
+      {/* Modal tạo/sửa booking */}      <Modal open={modal.open} onClose={() => setModal({ open: false })} title={modal.mode === 'add' ? 'Tạo đặt phòng' : 'Chỉnh sửa đặt phòng'} size="lg">
         {err && <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{err}</div>}
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">ID Khách hàng <span className="text-red-500">*</span></label>
-              <input type="number" value={form.userId} onChange={e => setForm(p => ({ ...p, userId: e.target.value }))} placeholder="1" className="input-field" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Phòng <span className="text-red-500">*</span></label>
-              <select value={form.roomId} onChange={e => setForm(p => ({ ...p, roomId: e.target.value }))} className="input-field">
-                <option value="">Chọn phòng</option>
-                {rooms.filter(r => r.status === 'AVAILABLE').map(r => (
-                  <option key={r.id} value={r.id}>{r.roomNumber} — {new Intl.NumberFormat('vi-VN').format(r.price)}₫</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Check-in <span className="text-red-500">*</span></label>
-              <input type="datetime-local" value={form.checkInAt} onChange={e => setForm(p => ({ ...p, checkInAt: e.target.value }))} className="input-field" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Check-out <span className="text-red-500">*</span></label>
-              <input type="datetime-local" value={form.checkOutAt} onChange={e => setForm(p => ({ ...p, checkOutAt: e.target.value }))} className="input-field" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Giá phòng (₫)</label>
-              <input type="number" value={form.roomPrice} onChange={e => setForm(p => ({ ...p, roomPrice: e.target.value }))} placeholder="0" className="input-field" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Tổng tiền (₫)</label>
-              <input type="number" value={form.totalPrice} onChange={e => setForm(p => ({ ...p, totalPrice: e.target.value }))} placeholder="0" className="input-field" />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Trạng thái</label>
-            <select value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value }))} className="input-field">
-              {Object.entries(SL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Ghi chú</label>
-            <textarea value={form.note} onChange={e => setForm(p => ({ ...p, note: e.target.value }))} rows={2} className="input-field resize-none" />
-          </div>
+          {/* Compute merged errors for the form */}
+          {(() => {
+            const validationErrors = validateBooking(form);
+            const mergedErrors = { ...validationErrors, ...formFieldErrors };
+            const onFormChange = (field, value) => {
+              setForm(p => ({ ...p, [field]: value }));
+              if (formFieldErrors[field]) {
+                setFormFieldErrors(p => { const next = { ...p }; delete next[field]; return next; });
+              }
+            };
+            const onFormBlur = (field) => setFormTouched(p => ({ ...p, [field]: true }));
+            return (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">ID Khách hàng <span className="text-red-500">*</span></label>
+                    <input type="number" value={form.userId}
+                      onChange={e => onFormChange('userId', e.target.value)}
+                      onBlur={() => onFormBlur('userId')}
+                      placeholder="1" className="input-field" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Phòng <span className="text-red-500">*</span></label>
+                    <select value={form.roomId}
+                      onChange={e => onFormChange('roomId', e.target.value)}
+                      onBlur={() => onFormBlur('roomId')}
+                      className={`input-field ${formTouched.roomId && mergedErrors.roomId ? 'border-red-400 focus:ring-red-400' : ''}`}>
+                      <option value="">Chọn phòng</option>
+                      {rooms.filter(r => r.status === 'AVAILABLE').map(r => (
+                        <option key={r.id} value={r.id}>{r.roomNumber} — {new Intl.NumberFormat('vi-VN').format(r.price)}₫</option>
+                      ))}
+                    </select>
+                    {formTouched.roomId && mergedErrors.roomId && (
+                      <p className="text-red-500 text-sm mt-1">{mergedErrors.roomId}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Check-in <span className="text-red-500">*</span></label>
+                    <input type="datetime-local" value={form.checkInAt}
+                      onChange={e => onFormChange('checkInAt', e.target.value)}
+                      onBlur={() => onFormBlur('checkInAt')}
+                      className={`input-field ${formTouched.checkInAt && mergedErrors.checkInAt ? 'border-red-400 focus:ring-red-400' : ''}`} />
+                    {formTouched.checkInAt && mergedErrors.checkInAt && (
+                      <p className="text-red-500 text-sm mt-1">{mergedErrors.checkInAt}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Check-out <span className="text-red-500">*</span></label>
+                    <input type="datetime-local" value={form.checkOutAt}
+                      onChange={e => onFormChange('checkOutAt', e.target.value)}
+                      onBlur={() => onFormBlur('checkOutAt')}
+                      className={`input-field ${formTouched.checkOutAt && mergedErrors.checkOutAt ? 'border-red-400 focus:ring-red-400' : ''}`} />
+                    {formTouched.checkOutAt && mergedErrors.checkOutAt && (
+                      <p className="text-red-500 text-sm mt-1">{mergedErrors.checkOutAt}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Giá phòng (₫)</label>
+                    <input type="number" value={form.roomPrice}
+                      onChange={e => onFormChange('roomPrice', e.target.value)}
+                      placeholder="0" className="input-field" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Tổng tiền (₫)</label>
+                    <input type="number" value={form.totalPrice}
+                      onChange={e => onFormChange('totalPrice', e.target.value)}
+                      onBlur={() => onFormBlur('totalPrice')}
+                      placeholder="0"
+                      className={`input-field ${formTouched.totalPrice && mergedErrors.totalPrice ? 'border-red-400 focus:ring-red-400' : ''}`} />
+                    {formTouched.totalPrice && mergedErrors.totalPrice && (
+                      <p className="text-red-500 text-sm mt-1">{mergedErrors.totalPrice}</p>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Trạng thái</label>
+                  <select value={form.status} onChange={e => onFormChange('status', e.target.value)} className="input-field">
+                    {Object.entries(SL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Ghi chú</label>
+                  <textarea value={form.note} onChange={e => onFormChange('note', e.target.value)} rows={2} className="input-field resize-none" />
+                </div>
+              </>
+            );
+          })()}
         </div>
         <div className="flex gap-3 mt-6">
           <button onClick={() => setModal({ open: false })} className="btn-ghost flex-1">Hủy</button>
@@ -456,7 +554,7 @@ export default function BookingsPage() {
         <CheckOutModal
           booking={checkOutModal}
           onClose={() => setCheckOutModal(null)}
-          onSuccess={() => { setCheckOutModal(null); load(); }}
+          onSuccess={() => { setCheckOutModal(null); load(currentPage); }}
         />
       )}
 

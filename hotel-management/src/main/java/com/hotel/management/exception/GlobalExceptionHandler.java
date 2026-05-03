@@ -182,6 +182,30 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handles ConflictException.
+     * Returns HTTP 409 Conflict.
+     *
+     * @param ex      the ConflictException
+     * @param request the HTTP request
+     * @return ResponseEntity with ApiErrorResponse
+     */
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiErrorResponse> handleConflictException(
+            ConflictException ex,
+            HttpServletRequest request) {
+
+        ApiErrorResponse errorResponse = ApiErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.CONFLICT.value())
+                .error("Conflict")
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
+
+    /**
      * Handles NoHandlerFoundException.
      * Returns HTTP 404 Not Found for undefined endpoints.
      *

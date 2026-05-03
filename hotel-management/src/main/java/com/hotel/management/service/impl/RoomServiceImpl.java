@@ -1,6 +1,7 @@
 package com.hotel.management.service.impl;
 
 import com.hotel.management.dto.RoomDTO;
+import com.hotel.management.dto.response.PageResponse;
 import com.hotel.management.entity.Room;
 import com.hotel.management.entity.RoomType;
 import com.hotel.management.enums.RoomStatus;
@@ -8,6 +9,7 @@ import com.hotel.management.repository.RoomRepository;
 import com.hotel.management.repository.RoomTypeRepository;
 import com.hotel.management.service.RoomService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -138,6 +140,24 @@ public class RoomServiceImpl implements RoomService {
         return roomRepository.filterRooms(status, roomTypeId, keyword).stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<RoomDTO> getAllRooms(Pageable pageable) {
+        return PageResponse.from(roomRepository.findAll(pageable).map(this::mapToDTO));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<RoomDTO> getRoomsByStatus(RoomStatus status, Pageable pageable) {
+        return PageResponse.from(roomRepository.findByStatus(status, pageable).map(this::mapToDTO));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<RoomDTO> filterRooms(RoomStatus status, Integer roomTypeId, String keyword, Pageable pageable) {
+        return PageResponse.from(roomRepository.filterRooms(status, roomTypeId, keyword, pageable).map(this::mapToDTO));
     }
 
     @Override

@@ -5,10 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hotel.management.dto.RoomDTO;
 import com.hotel.management.dto.request.CreateRoomRequest;
 import com.hotel.management.dto.response.ApiResponse;
+import com.hotel.management.dto.response.PageResponse;
 import com.hotel.management.enums.RoomStatus;
 import com.hotel.management.service.RoomService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -79,25 +82,30 @@ public class RoomController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<?>> getRooms(
+    public ResponseEntity<ApiResponse<PageResponse<RoomDTO>>> getRooms(
             @RequestParam(required = false) RoomStatus status,
             @RequestParam(required = false) Integer type,
             @RequestParam(required = false) Boolean available,
             @RequestParam(required = false) Integer capacity,
-            @RequestParam(required = false) String keyword) {
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         try {
-            List<RoomDTO> rooms;
-            // available + capacity: filter available rooms by capacity
+            size = Math.min(size, 100);
+            Pageable pageable = PageRequest.of(page, size);
+            PageResponse<RoomDTO> result;
             if (Boolean.TRUE.equals(available) && capacity != null) {
-                rooms = roomService.getAvailableRoomsByCapacity(capacity);
+                List<RoomDTO> rooms = roomService.getAvailableRoomsByCapacity(capacity);
+                result = new PageResponse<>(rooms, 0, rooms.size(), rooms.size(), 1, true, true);
+            } else if (Boolean.TRUE.equals(available) && status == null && type == null && keyword == null) {
+                List<RoomDTO> rooms = roomService.getAvailableRooms();
+                result = new PageResponse<>(rooms, 0, rooms.size(), rooms.size(), 1, true, true);
             } else if (status != null || type != null || keyword != null) {
-                rooms = roomService.filterRooms(status, type, keyword);
-            } else if (Boolean.TRUE.equals(available)) {
-                rooms = roomService.getAvailableRooms();
+                result = roomService.filterRooms(status, type, keyword, pageable);
             } else {
-                rooms = roomService.getAllRooms();
+                result = roomService.getAllRooms(pageable);
             }
-            return ResponseEntity.ok(ApiResponse.success("Rooms retrieved successfully", rooms));
+            return ResponseEntity.ok(ApiResponse.success("Rooms retrieved successfully", result));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Failed to retrieve rooms: " + e.getMessage()));
@@ -168,7 +176,6 @@ public class RoomController {
             String imageUrl = "/uploads/rooms/" + id + "/" + filename;
             var room = roomOptional.get();
 
-            // Parse existing images JSON array
             String existing = room.getImgFolder();
             List<String> images;
             try {

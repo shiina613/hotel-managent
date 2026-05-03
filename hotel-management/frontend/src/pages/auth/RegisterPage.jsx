@@ -2,24 +2,93 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import authApi from '../../api/authApi';
 
+function validate(form) {
+  const errors = {};
+
+  if (!form.fullName.trim()) errors.fullName = 'Họ tên không được để trống';
+  else if (form.fullName.trim().length < 2) errors.fullName = 'Họ tên phải có ít nhất 2 ký tự';
+
+  if (form.phone && !/^\d{10,11}$/.test(form.phone.trim())) {
+    errors.phone = 'Số điện thoại phải có 10-11 chữ số';
+  }
+
+  if (!form.email.trim()) errors.email = 'Email không được để trống';
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+    errors.email = 'Email không đúng định dạng';
+  }
+
+  if (!form.username.trim()) errors.username = 'Tên đăng nhập không được để trống';
+  else if (form.username.trim().length < 3) errors.username = 'Tên đăng nhập phải có ít nhất 3 ký tự';
+
+  if (!form.password) errors.password = 'Mật khẩu không được để trống';
+  else if (form.password.length < 8) errors.password = 'Mật khẩu phải có ít nhất 8 ký tự';
+
+  if (!form.confirmPassword) errors.confirmPassword = 'Vui lòng xác nhận mật khẩu';
+  else if (form.password && form.confirmPassword !== form.password) {
+    errors.confirmPassword = 'Mật khẩu xác nhận không khớp';
+  }
+
+  return errors;
+}
+
+const ALL_FIELDS = ['fullName', 'phone', 'email', 'username', 'password', 'confirmPassword'];
+
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ username: '', password: '', confirmPassword: '', fullName: '', email: '', phone: '' });
+  const [touched, setTouched] = useState({});
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const onChange = (e) => { setForm(p => ({ ...p, [e.target.name]: e.target.value })); setError(''); };
+  const validationErrors = validate(form);
+  // Merge inline validation errors with API field errors
+  const errors = { ...validationErrors, ...fieldErrors };
+
+  const onChange = (e) => {
+    setForm(p => ({ ...p, [e.target.name]: e.target.value }));
+    setError('');
+    // Clear the specific field error when user starts typing
+    if (fieldErrors[e.target.name]) {
+      setFieldErrors(p => { const next = { ...p }; delete next[e.target.name]; return next; });
+    }
+  };
+  const onBlur = (e) => { setTouched(p => ({ ...p, [e.target.name]: true })); };
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (!form.username || !form.password || !form.fullName || !form.email) { setError('Vui lòng điền đầy đủ thông tin bắt buộc'); return; }
-    if (form.password !== form.confirmPassword) { setError('Mật khẩu xác nhận không khớp'); return; }
+    // Mark all fields as touched to show all errors
+    const allTouched = ALL_FIELDS.reduce((acc, f) => ({ ...acc, [f]: true }), {});
+    setTouched(allTouched);
+    if (Object.keys(validationErrors).length > 0) return;
+
     setLoading(true);
-    try {
-      await authApi.register({ username: form.username, password: form.password, fullName: form.fullName, email: form.email, phone: form.phone, role: 'CUSTOMER', status: 'ACTIVE' });
+    const res = await authApi.register({
+      username: form.username,
+      password: form.password,
+      fullName: form.fullName,
+      email: form.email,
+      phone: form.phone,
+      role: 'CUSTOMER',
+      status: 'ACTIVE',
+    });
+    setLoading(false);
+    if (res.success) {
       navigate('/login');
-    } catch (e) { setError(typeof e === 'string' ? e : 'Đăng ký thất bại'); }
-    finally { setLoading(false); }
+    } else {
+      // Handle API field errors (ValidationErrorResponse)
+      if (res.fieldErrors && Array.isArray(res.fieldErrors) && res.fieldErrors.length > 0) {
+        const apiFieldErrors = res.fieldErrors.reduce((acc, { field, message }) => {
+          acc[field] = message;
+          return acc;
+        }, {});
+        setFieldErrors(apiFieldErrors);
+        const touchedFields = res.fieldErrors.reduce((acc, { field }) => { acc[field] = true; return acc; }, {});
+        setTouched(p => ({ ...p, ...touchedFields }));
+      } else {
+        setError(res.message || 'Đăng ký thất bại');
+      }
+    }
   };
 
   return (
@@ -53,28 +122,97 @@ export default function RegisterPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Họ tên <span className="text-red-500">*</span></label>
-                <input name="fullName" value={form.fullName} onChange={onChange} placeholder="Nguyễn Văn A" className="input-field" disabled={loading} />
+                <input
+                  name="fullName"
+                  value={form.fullName}
+                  onChange={onChange}
+                  onBlur={onBlur}
+                  placeholder="Nguyễn Văn A"
+                  className={`input-field ${touched.fullName && errors.fullName ? 'border-red-400 focus:ring-red-400' : ''}`}
+                  disabled={loading}
+                />
+                {touched.fullName && errors.fullName && (
+                  <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Số điện thoại</label>
-                <input name="phone" value={form.phone} onChange={onChange} placeholder="0901234567" className="input-field" disabled={loading} />
+                <input
+                  name="phone"
+                  value={form.phone}
+                  onChange={onChange}
+                  onBlur={onBlur}
+                  placeholder="0901234567"
+                  className={`input-field ${touched.phone && errors.phone ? 'border-red-400 focus:ring-red-400' : ''}`}
+                  disabled={loading}
+                />
+                {touched.phone && errors.phone && (
+                  <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+                )}
               </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Email <span className="text-red-500">*</span></label>
-              <input name="email" type="email" value={form.email} onChange={onChange} placeholder="email@example.com" className="input-field" disabled={loading} />
+              <input
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={onChange}
+                onBlur={onBlur}
+                placeholder="email@example.com"
+                className={`input-field ${touched.email && errors.email ? 'border-red-400 focus:ring-red-400' : ''}`}
+                disabled={loading}
+              />
+              {touched.email && errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Tên đăng nhập <span className="text-red-500">*</span></label>
-              <input name="username" value={form.username} onChange={onChange} placeholder="Tên đăng nhập" className="input-field" disabled={loading} />
+              <input
+                name="username"
+                value={form.username}
+                onChange={onChange}
+                onBlur={onBlur}
+                placeholder="Tên đăng nhập"
+                className={`input-field ${touched.username && errors.username ? 'border-red-400 focus:ring-red-400' : ''}`}
+                disabled={loading}
+              />
+              {touched.username && errors.username && (
+                <p className="text-red-500 text-sm mt-1">{errors.username}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Mật khẩu <span className="text-red-500">*</span></label>
-              <input name="password" type="password" value={form.password} onChange={onChange} placeholder="Tối thiểu 6 ký tự" className="input-field" disabled={loading} />
+              <input
+                name="password"
+                type="password"
+                value={form.password}
+                onChange={onChange}
+                onBlur={onBlur}
+                placeholder="Tối thiểu 8 ký tự"
+                className={`input-field ${touched.password && errors.password ? 'border-red-400 focus:ring-red-400' : ''}`}
+                disabled={loading}
+              />
+              {touched.password && errors.password && (
+                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Xác nhận mật khẩu <span className="text-red-500">*</span></label>
-              <input name="confirmPassword" type="password" value={form.confirmPassword} onChange={onChange} placeholder="Nhập lại mật khẩu" className="input-field" disabled={loading} />
+              <input
+                name="confirmPassword"
+                type="password"
+                value={form.confirmPassword}
+                onChange={onChange}
+                onBlur={onBlur}
+                placeholder="Nhập lại mật khẩu"
+                className={`input-field ${touched.confirmPassword && errors.confirmPassword ? 'border-red-400 focus:ring-red-400' : ''}`}
+                disabled={loading}
+              />
+              {touched.confirmPassword && errors.confirmPassword && (
+                <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
+              )}
             </div>
             <button type="submit" disabled={loading}
               className="w-full py-3 rounded-lg font-semibold text-white mt-2"

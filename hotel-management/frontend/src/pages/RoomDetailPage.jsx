@@ -21,19 +21,68 @@ function parseImages(imgFolder) {
   } catch { return { thumb: null, gallery: [] }; }
 }
 
-// Tính số giờ giữa 2 datetime
-function calcHours(checkIn, checkOut) {
-  if (!checkIn || !checkOut) return 0;
-  const diff = new Date(checkOut) - new Date(checkIn);
-  return Math.max(0, diff / (1000 * 60 * 60));
+// ─── Pricing logic ────────────────────────────────────────────────────────────
+// Quy tắc: nếu booking overlap với khung 23:00→07:00 và tiền giờ của phần
+// overlap đó >= giá 1 đêm → tính 1 đêm (có lợi cho khách).
+// Phần thời gian ngoài các khung đêm đã áp dụng → tính theo giờ.
+
+const NIGHT_START_H = 23;
+const NIGHT_END_H   = 7;
+
+function calcBreakdown(checkIn, checkOut, pricePerNight, hourlyPrice) {
+  if (!checkIn || !checkOut) return { nights: 0, extraHours: 0, totalHours: 0 };
+  const ci = new Date(checkIn);
+  const co = new Date(checkOut);
+  if (co <= ci) return { nights: 0, extraHours: 0, totalHours: 0 };
+
+  const totalMs = co - ci;
+  const totalHours = totalMs / (1000 * 60 * 60);
+  const ratePerHour = hourlyPrice || Math.round(pricePerNight / 24);
+
+  const startDay = new Date(ci);
+  startDay.setHours(0, 0, 0, 0);
+  const days = Math.ceil(totalHours / 24) + 2;
+
+  let nights = 0;
+  let coveredMs = 0;
+
+  for (let d = 0; d < days; d++) {
+    const ns = new Date(startDay);
+    ns.setDate(startDay.getDate() + d);
+    ns.setHours(NIGHT_START_H, 0, 0, 0);
+
+    const ne = new Date(ns);
+    ne.setDate(ne.getDate() + 1);
+    ne.setHours(NIGHT_END_H, 0, 0, 0);
+
+    const overlapStart = Math.max(ci.getTime(), ns.getTime());
+    const overlapEnd   = Math.min(co.getTime(), ne.getTime());
+    if (overlapEnd <= overlapStart) continue;
+
+    const overlapHours = (overlapEnd - overlapStart) / (1000 * 60 * 60);
+    const overlapCost  = Math.ceil(overlapHours * 2) / 2 * ratePerHour;
+
+    if (overlapCost >= pricePerNight) {
+      nights++;
+      coveredMs += (overlapEnd - overlapStart);
+    }
+  }
+
+  const remainingHours = (totalMs - coveredMs) / (1000 * 60 * 60);
+  const extraHours = Math.ceil(remainingHours * 2) / 2;
+
+  return { nights, extraHours: Math.max(0, extraHours), totalHours };
 }
 
-// Tính tiền: ưu tiên hourlyPrice nếu có, fallback về price/24, làm tròn lên 0.5h
-function calcTotal(pricePerNight, hourlyPrice, hours) {
-  if (hours <= 0) return 0;
-  const rounded = Math.ceil(hours * 2) / 2;
+function calcTotal(pricePerNight, hourlyPrice, checkIn, checkOut) {
   const ratePerHour = hourlyPrice || Math.round(pricePerNight / 24);
-  return Math.round(ratePerHour * rounded);
+  const { nights, extraHours } = calcBreakdown(checkIn, checkOut, pricePerNight, hourlyPrice);
+  return Math.round(nights * pricePerNight + extraHours * ratePerHour);
+}
+
+function calcHours(checkIn, checkOut) {
+  if (!checkIn || !checkOut) return 0;
+  return Math.max(0, (new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60));
 }
 
 // Giờ tối thiểu để check-in (hiện tại + 3h, làm tròn lên 30 phút)
@@ -68,8 +117,8 @@ function BookingModal({ room, onClose, onSuccess }) {
   const [err, setErr] = useState('');
 
   const hours = calcHours(form.checkIn, form.checkOut);
-  const total = calcTotal(room.price, room.hourlyPrice, hours);
-  const displayHours = hours > 0 ? (Math.ceil(hours * 2) / 2) : 0;
+  const { nights, extraHours } = calcBreakdown(form.checkIn, form.checkOut, room.price, room.hourlyPrice);
+  const total = calcTotal(room.price, room.hourlyPrice, form.checkIn, form.checkOut);
   const effectiveHourlyRate = room.hourlyPrice || Math.round(room.price / 24);
 
   const handleCheckInChange = (val) => {
@@ -109,7 +158,7 @@ function BookingModal({ room, onClose, onSuccess }) {
       toast.success('Đặt phòng thành công! Vui lòng chờ lễ tân xác nhận.');
       onSuccess();
     } catch (e) {
-      setErr(typeof e === 'string' ? e : 'Đặt phòng thất bại, vui lòng thử lại');
+      setErr((e && typeof e === 'object' && e.message) ? e.message : (typeof e === 'string' ? e : 'Đặt phòng thất bại, vui lòng thử lại'));
     } finally { setSaving(false); }
   };
 
@@ -126,7 +175,7 @@ function BookingModal({ room, onClose, onSuccess }) {
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
-            Đặt phòng phải trước ít nhất 3 tiếng. Tính tiền theo giờ thực tế (làm tròn lên 30 phút).
+            Đặt phòng phải trước ít nhất 3 tiếng. Khung <strong>23:00 – 07:00</strong> tính là 1 đêm. Ngoài khung tính theo giờ (làm tròn lên 30 phút).
           </div>
 
           <div>
@@ -146,18 +195,34 @@ function BookingModal({ room, onClose, onSuccess }) {
           {hours > 0 && (
             <div className="bg-primary-50 rounded-xl p-4 space-y-2 text-sm">
               <div className="flex justify-between text-gray-600">
-                <span>Giá theo đêm</span>
-                <span>{fmt(room.price)}</span>
+                <span>Giá theo đêm <span className="text-gray-400 text-xs">(23:00–07:00)</span></span>
+                <span>{fmt(room.price)} / đêm</span>
               </div>
               <div className="flex justify-between text-gray-600">
-                <span>Giá theo giờ {!room.hourlyPrice && <span className="text-gray-400">(tự tính)</span>}</span>
+                <span>Giá theo giờ {!room.hourlyPrice && <span className="text-gray-400 text-xs">(tự tính)</span>}</span>
                 <span>{fmt(effectiveHourlyRate)} / giờ</span>
               </div>
-              <div className="flex justify-between text-gray-600">
-                <span>Thời gian lưu trú</span>
-                <span>{displayHours} giờ</span>
+              <div className="border-t border-primary-100 pt-2 space-y-1.5">
+                {nights > 0 && (
+                  <div className="flex justify-between text-gray-700">
+                    <span>{nights} đêm × {fmt(room.price)}</span>
+                    <span>{fmt(nights * room.price)}</span>
+                  </div>
+                )}
+                {extraHours > 0 && (
+                  <div className="flex justify-between text-gray-700">
+                    <span>{extraHours} giờ lẻ × {fmt(effectiveHourlyRate)}</span>
+                    <span>{fmt(Math.round(extraHours * effectiveHourlyRate))}</span>
+                  </div>
+                )}
+                {nights === 0 && extraHours === 0 && (
+                  <div className="flex justify-between text-gray-700">
+                    <span>{Math.ceil(hours * 2) / 2} giờ × {fmt(effectiveHourlyRate)}</span>
+                    <span>{fmt(total)}</span>
+                  </div>
+                )}
               </div>
-              <div className="flex justify-between font-bold text-gray-900 pt-2 border-t border-primary-100">
+              <div className="flex justify-between font-bold text-gray-900 pt-1 border-t border-primary-200">
                 <span>Tổng cộng</span>
                 <span className="text-primary-500">{fmt(total)}</span>
               </div>

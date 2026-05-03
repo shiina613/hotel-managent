@@ -4,10 +4,13 @@ import com.hotel.management.dto.RoomTypeDTO;
 import com.hotel.management.dto.request.CreateRoomTypeRequest;
 import com.hotel.management.dto.request.UpdateRoomTypeRequest;
 import com.hotel.management.dto.response.ApiResponse;
+import com.hotel.management.dto.response.PageResponse;
 import com.hotel.management.exception.ResourceNotFoundException;
 import com.hotel.management.service.RoomTypeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -45,12 +48,17 @@ public class RoomTypeController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<?>> getRoomTypes(@RequestParam(required = false) String keyword) {
+    public ResponseEntity<ApiResponse<PageResponse<RoomTypeDTO>>> getRoomTypes(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         try {
-            List<RoomTypeDTO> roomTypes = keyword != null
-                    ? roomTypeService.searchRoomTypes(keyword)
-                    : roomTypeService.getAllRoomTypes();
-            return ResponseEntity.ok(ApiResponse.success("Room types retrieved successfully", roomTypes));
+            size = Math.min(size, 100);
+            Pageable pageable = PageRequest.of(page, size);
+            PageResponse<RoomTypeDTO> result = keyword != null
+                    ? roomTypeService.searchRoomTypes(keyword, pageable)
+                    : roomTypeService.getAllRoomTypes(pageable);
+            return ResponseEntity.ok(ApiResponse.success("Room types retrieved successfully", result));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.error("Failed to retrieve room types: " + e.getMessage()));

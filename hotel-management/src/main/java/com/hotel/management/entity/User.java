@@ -55,6 +55,12 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime updateAt;
 
+    @Column(length = 255)
+    private String securityQuestion;
+
+    @Column(length = 255)
+    private String securityAnswerHash;
+
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Booking> bookings = new ArrayList<>();

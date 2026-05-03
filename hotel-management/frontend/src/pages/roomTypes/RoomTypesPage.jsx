@@ -3,9 +3,14 @@ import roomTypeApi from '../../api/roomTypeApi';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { toast } from '../../components/ui/Toast';
+import Pagination from '../../components/ui/Pagination';
+import TableSkeleton from '../../components/ui/TableSkeleton';
 
 export default function RoomTypesPage() {
   const [rows, setRows] = useState([]);
+  const [pagination, setPagination] = useState({ currentPage: 0, totalPages: 0, totalElements: 0, pageSize: 10 });
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(10);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [modal, setModal] = useState({ open: false, mode: 'add', data: null });
@@ -14,8 +19,25 @@ export default function RoomTypesPage() {
   const [err, setErr] = useState('');
   const [confirm, setConfirm] = useState({ open: false, id: null });
 
-  const load = () => { setLoading(true); roomTypeApi.getRoomTypes().then(r => setRows(r?.data || [])).finally(() => setLoading(false)); };
-  useEffect(() => { load(); }, []);
+  const load = (page = currentPage) => {
+    setLoading(true);
+    roomTypeApi.getRoomTypes({ page, size: pageSize }).then(r => {
+      const data = r?.data;
+      if (data && typeof data === 'object' && 'content' in data) {
+        setRows(data.content || []);
+        setPagination({
+          currentPage: data.currentPage ?? page,
+          totalPages: data.totalPages ?? 1,
+          totalElements: data.totalElements ?? 0,
+          pageSize: data.pageSize ?? pageSize,
+        });
+      } else {
+        setRows(Array.isArray(data) ? data : []);
+        setPagination({ currentPage: 0, totalPages: 1, totalElements: Array.isArray(data) ? data.length : 0, pageSize });
+      }
+    }).finally(() => setLoading(false));
+  };
+  useEffect(() => { load(currentPage); }, [currentPage]);
 
   const filtered = rows.filter(r => !search || r.name?.toLowerCase().includes(search.toLowerCase()));
   const openAdd = () => { setForm({ name: '', description: '' }); setErr(''); setModal({ open: true, mode: 'add' }); };
@@ -27,14 +49,14 @@ export default function RoomTypesPage() {
     try {
       if (modal.mode === 'add') await roomTypeApi.createRoomType(form);
       else await roomTypeApi.updateRoomType(modal.data.id, form);
-      setModal({ open: false }); load(); toast.success('Lưu thành công');
-    } catch (e) { setErr(typeof e === 'string' ? e : 'Lưu thất bại'); }
+      setModal({ open: false }); load(currentPage); toast.success('Lưu thành công');
+    } catch (e) { setErr((e && typeof e === 'object' && e.message) ? e.message : (typeof e === 'string' ? e : 'Lưu thất bại')); }
     finally { setSaving(false); }
   };
 
   const del = async () => {
-    try { await roomTypeApi.deleteRoomType(confirm.id); load(); toast.success('Đã xóa loại phòng'); }
-    catch (e) { toast.error(typeof e === 'string' ? e : 'Xóa thất bại'); }
+    try { await roomTypeApi.deleteRoomType(confirm.id); load(currentPage); toast.success('Đã xóa loại phòng'); }
+    catch (e) { toast.error((e && typeof e === 'object' && e.message) ? e.message : (typeof e === 'string' ? e : 'Xóa thất bại')); }
     finally { setConfirm({ open: false, id: null }); }
   };
 
@@ -43,7 +65,7 @@ export default function RoomTypesPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Loại phòng</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{rows.length} loại phòng</p>
+          <p className="text-sm text-gray-500 mt-0.5">{pagination.totalElements} loại phòng</p>
         </div>
         <button onClick={openAdd} className="btn-primary flex items-center gap-2">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
@@ -57,7 +79,7 @@ export default function RoomTypesPage() {
       </div>
 
       <div className="card overflow-hidden">
-        {loading ? <div className="py-16 text-center text-gray-400 text-sm">Đang tải...</div>
+        {loading ? <TableSkeleton rows={pageSize} cols={5} />
           : filtered.length === 0 ? <div className="py-16 text-center text-gray-400 text-sm">Không có dữ liệu</div>
           : (
             <div className="overflow-x-auto">
@@ -92,6 +114,14 @@ export default function RoomTypesPage() {
           )
         }
       </div>
+
+      <Pagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalElements={pagination.totalElements}
+        pageSize={pagination.pageSize}
+        onPageChange={(p) => setCurrentPage(p)}
+      />
 
       <Modal open={modal.open} onClose={() => setModal({ open: false })} title={modal.mode === 'add' ? 'Thêm loại phòng' : 'Chỉnh sửa loại phòng'} size="sm">
         {err && <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{err}</div>}

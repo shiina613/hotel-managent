@@ -16,6 +16,7 @@ public class ServiceDTO {
     private Integer price;
     private String unit;
     private Boolean isActive;
+    private String imageUrl;
     private LocalDateTime createAt;
     private LocalDateTime updateAt;
 }

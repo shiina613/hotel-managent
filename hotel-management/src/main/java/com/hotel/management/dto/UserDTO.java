@@ -23,4 +23,8 @@ public class UserDTO {
     private UserRole role;
     private LocalDateTime createAt;
     private LocalDateTime updateAt;
+
+    // Optional security question fields (used during creation)
+    private String securityQuestion;
+    private String securityAnswer; // raw answer — will be hashed before persisting
 }

@@ -4,6 +4,8 @@ import roomTypeApi from '../../api/roomTypeApi';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { toast } from '../../components/ui/Toast';
+import Pagination from '../../components/ui/Pagination';
+import TableSkeleton from '../../components/ui/TableSkeleton';
 
 const SL = { AVAILABLE: 'Trống', OCCUPIED: 'Đang ở', MAINTENANCE: 'Bảo trì' };
 const SB = { AVAILABLE: 'badge-success', OCCUPIED: 'badge-info', MAINTENANCE: 'badge-warning' };
@@ -36,7 +38,7 @@ function ImageManager({ roomId, imgFolder, onUpdated }) {
       const res = await roomApi.uploadImage(roomId, file, isThumb);
       onUpdated(res?.data?.imgFolder);
       toast.success(isThumb ? 'Đã cập nhật ảnh thumbnail' : 'Đã thêm ảnh');
-    } catch (e) { toast.error(typeof e === 'string' ? e : 'Upload thất bại'); }
+    } catch (e) { toast.error((e && typeof e === 'object' && e.message) ? e.message : (typeof e === 'string' ? e : 'Upload thất bại')); }
     finally { setUploadingCount(c => c - 1); }
   };
 
@@ -52,7 +54,7 @@ function ImageManager({ roomId, imgFolder, onUpdated }) {
       const res = await roomApi.deleteImage(roomId, url);
       onUpdated(res?.data?.imgFolder);
       toast.success('Đã xóa ảnh');
-    } catch (e) { toast.error(typeof e === 'string' ? e : 'Xóa thất bại'); }
+    } catch (e) { toast.error((e && typeof e === 'object' && e.message) ? e.message : (typeof e === 'string' ? e : 'Xóa thất bại')); }
   };
 
   const isUploading = uploadingCount > 0;
@@ -159,6 +161,9 @@ function ImageManager({ roomId, imgFolder, onUpdated }) {
 export default function RoomsPage() {
   const [rows, setRows] = useState([]);
   const [types, setTypes] = useState([]);
+  const [pagination, setPagination] = useState({ currentPage: 0, totalPages: 0, totalElements: 0, pageSize: 10 });
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(10);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
@@ -170,13 +175,33 @@ export default function RoomsPage() {
   const [confirm, setConfirm] = useState({ open: false, id: null });
   const [currentImgFolder, setCurrentImgFolder] = useState('');
 
-  const load = () => {
+  const load = (page = currentPage) => {
     setLoading(true);
-    Promise.all([roomApi.getRooms(), roomTypeApi.getRoomTypes()])
-      .then(([r, t]) => { setRows(r?.data || []); setTypes(t?.data || []); })
+    Promise.all([roomApi.getRooms({ page, size: pageSize }), roomTypeApi.getRoomTypes()])
+      .then(([r, t]) => {
+        const data = r?.data;
+        if (data && typeof data === 'object' && 'content' in data) {
+          setRows(data.content || []);
+          setPagination({
+            currentPage: data.currentPage ?? page,
+            totalPages: data.totalPages ?? 1,
+            totalElements: data.totalElements ?? 0,
+            pageSize: data.pageSize ?? pageSize,
+          });
+        } else {
+          setRows(Array.isArray(data) ? data : []);
+          setPagination({ currentPage: 0, totalPages: 1, totalElements: Array.isArray(data) ? data.length : 0, pageSize });
+        }
+        const typeData = t?.data;
+        if (typeData && typeof typeData === 'object' && 'content' in typeData) {
+          setTypes(typeData.content || []);
+        } else {
+          setTypes(Array.isArray(typeData) ? typeData : []);
+        }
+      })
       .finally(() => setLoading(false));
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(currentPage); }, [currentPage]);
 
   const filtered = rows.filter(r => {
     const ms = !search || r.roomNumber?.toLowerCase().includes(search.toLowerCase()) || r.description?.toLowerCase().includes(search.toLowerCase());
@@ -211,14 +236,14 @@ export default function RoomsPage() {
         await roomApi.updateRoom(modal.data.id, p);
         setModal({ open: false }); toast.success('Lưu thành công');
       }
-      load();
-    } catch (e) { setErr(typeof e === 'string' ? e : 'Lưu thất bại'); }
+      load(currentPage);
+    } catch (e) { setErr((e && typeof e === 'object' && e.message) ? e.message : (typeof e === 'string' ? e : 'Lưu thất bại')); }
     finally { setSaving(false); }
   };
 
   const del = async () => {
-    try { await roomApi.deleteRoom(confirm.id); load(); toast.success('Đã xóa phòng'); }
-    catch (e) { toast.error(typeof e === 'string' ? e : 'Xóa thất bại'); }
+    try { await roomApi.deleteRoom(confirm.id); load(currentPage); toast.success('Đã xóa phòng'); }
+    catch (e) { toast.error((e && typeof e === 'object' && e.message) ? e.message : (typeof e === 'string' ? e : 'Xóa thất bại')); }
     finally { setConfirm({ open: false, id: null }); }
   };
 
@@ -229,7 +254,7 @@ export default function RoomsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Quản lý phòng</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{rows.length} phòng</p>
+          <p className="text-sm text-gray-500 mt-0.5">{pagination.totalElements} phòng</p>
         </div>
         <button onClick={openAdd} className="btn-primary flex items-center gap-2">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
@@ -248,7 +273,7 @@ export default function RoomsPage() {
       </div>
 
       <div className="card overflow-hidden">
-        {loading ? <div className="py-16 text-center text-gray-400 text-sm">Đang tải...</div>
+        {loading ? <TableSkeleton rows={pageSize} cols={8} />
           : filtered.length === 0 ? <div className="py-16 text-center text-gray-400 text-sm">Không có dữ liệu</div>
           : (
             <div className="overflow-x-auto">
@@ -301,8 +326,16 @@ export default function RoomsPage() {
         }
       </div>
 
+      <Pagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalElements={pagination.totalElements}
+        pageSize={pagination.pageSize}
+        onPageChange={(p) => setCurrentPage(p)}
+      />
+
       {/* Modal */}
-      <Modal open={modal.open} onClose={() => { setModal({ open: false }); load(); }}
+      <Modal open={modal.open} onClose={() => { setModal({ open: false }); load(currentPage); }}
         title={modal.mode === 'add' ? 'Thêm phòng mới' : `Phòng ${modal.data?.roomNumber || ''}`}
         size="lg">
 
@@ -366,7 +399,7 @@ export default function RoomsPage() {
               </div>
             </div>
             <div className="flex gap-3 mt-6">
-              <button onClick={() => { setModal({ open: false }); load(); }} className="btn-ghost flex-1">Hủy</button>
+              <button onClick={() => { setModal({ open: false }); load(currentPage); }} className="btn-ghost flex-1">Hủy</button>
               <button onClick={save} disabled={saving} className="btn-primary flex-1">{saving ? 'Đang lưu...' : modal.mode === 'add' ? 'Tạo & thêm ảnh →' : 'Lưu'}</button>
             </div>
           </>
@@ -384,7 +417,7 @@ export default function RoomsPage() {
               }}
             />
             <div className="mt-6">
-              <button onClick={() => { setModal({ open: false }); load(); }} className="btn-primary w-full">Xong</button>
+              <button onClick={() => { setModal({ open: false }); load(currentPage); }} className="btn-primary w-full">Xong</button>
             </div>
           </>
         )}

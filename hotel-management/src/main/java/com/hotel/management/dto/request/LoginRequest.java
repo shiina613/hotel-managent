@@ -1,6 +1,7 @@
 package com.hotel.management.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Getter
@@ -14,5 +15,6 @@ public class LoginRequest {
     private String username;
 
     @NotBlank(message = "Password is required")
+    @Size(min = 8, message = "Mật khẩu phải có ít nhất 8 ký tự")
     private String password;
 }

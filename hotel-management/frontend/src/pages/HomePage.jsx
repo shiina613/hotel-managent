@@ -5,15 +5,15 @@ import roomApi from '../api/roomApi';
 import serviceApi from '../api/serviceApi';
 
 const MOCK_ROOMS = [
-  { name: 'Phòng Deluxe', price: 1200000, capacity: 2, img: '/images/room/anh-phong.jpg', desc: 'Phòng sang trọng với ban công và view tuyệt đẹp' },
-  { name: 'Phòng Superior', price: 900000, capacity: 2, img: '/images/room/anh-phong-2.jpg', desc: 'Phòng tiêu chuẩn với đầy đủ tiện nghi hiện đại' },
-  { name: 'Phòng Family', price: 1800000, capacity: 4, img: '/images/room/trang-tri-phong-khach-san-13.jpg', desc: 'Phòng rộng rãi phù hợp cho gia đình' },
+  { name: 'Phòng Deluxe', price: 1200000, capacity: 2, img: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&q=80', desc: 'Phòng sang trọng với ban công và view tuyệt đẹp' },
+  { name: 'Phòng Superior', price: 900000, capacity: 2, img: 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=600&q=80', desc: 'Phòng tiêu chuẩn với đầy đủ tiện nghi hiện đại' },
+  { name: 'Phòng Family', price: 1800000, capacity: 4, img: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=600&q=80', desc: 'Phòng rộng rãi phù hợp cho gia đình' },
 ];
 const MOCK_SERVICES = [
-  { name: 'Spa & Wellness', img: '/images/service/spa.jpg' },
-  { name: 'Hồ bơi', img: '/images/service/pool.jpg' },
-  { name: 'Nhà hàng', img: '/images/service/restaurant.jpg' },
-  { name: 'Đưa đón sân bay', img: '/images/service/air port transfer.jpg' },
+  { name: 'Spa & Wellness', imageUrl: '/uploads/rooms/services/spa.jpg' },
+  { name: 'Hồ bơi', imageUrl: '/uploads/rooms/services/pool.jpg' },
+  { name: 'Nhà hàng', imageUrl: '/uploads/rooms/services/restaurant.jpg' },
+  { name: 'Đưa đón sân bay', imageUrl: '/uploads/rooms/services/airport.jpg' },
 ];
 const MOCK_REVIEWS = [
   { name: 'Nguyễn Minh', rating: 5, content: 'Khách sạn rất đẹp, nhân viên thân thiện. Tôi sẽ quay lại!' },
@@ -98,15 +98,25 @@ export default function HomePage() {
   const [result, setResult] = useState(null);
 
   useEffect(() => {
-    roomApi.getRooms({ available: true }).then(r => { if (r?.data?.length) setRooms(r.data); }).catch(() => {});
-    serviceApi.getServices({ active: true }).then(r => { if (r?.data?.length) setServices(r.data); }).catch(() => {});
+    roomApi.getRooms({ available: true, size: 6 }).then(r => {
+      const data = r?.data;
+      const list = data?.content ?? (Array.isArray(data) ? data : []);
+      if (list.length) setRooms(list);
+    }).catch(() => {});
+    serviceApi.getServices({ active: true, size: 8 }).then(r => {
+      const data = r?.data;
+      const list = data?.content ?? (Array.isArray(data) ? data : []);
+      if (list.length) setServices(list);
+    }).catch(() => {});
   }, []);
 
   const handleSearch = async (e) => {
     e.preventDefault();
     try {
       const res = await roomApi.getRooms({ available: true, capacity: search.guests });
-      setResult(res?.data || []);
+      const data = res?.data;
+      const list = data?.content ?? (Array.isArray(data) ? data : []);
+      setResult(list);
     } catch { setResult([]); }
     document.getElementById('rooms')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -150,15 +160,15 @@ export default function HomePage() {
 
       {/* Hero */}
       <section id="hero" className="relative h-[520px] overflow-hidden">
-        <img src="/images/banner/trang-tri-phong-khach-san-5.jpg" alt="Hero"
+        <img src="/uploads/rooms/banner/hero.jpg" alt="Hero"
           className="absolute inset-0 w-full h-full object-cover"
           onError={e => { e.target.style.display = 'none'; }} />
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(51,36,188,0.8), rgba(30,21,113,0.65))' }} />
+        <div className="absolute inset-0 bg-black/30" />
         <div className="relative h-full flex flex-col items-center justify-center text-center px-4">
-          <p className="text-primary-200 text-sm font-medium tracking-widest uppercase mb-3">Chào mừng đến với</p>
+          <p className="text-white/70 text-sm font-medium tracking-widest uppercase mb-3">Chào mừng đến với</p>
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-4">Etheric Hotel</h1>
-          <p className="text-primary-100 text-lg mb-8 max-w-xl">Trải nghiệm lưu trú sang trọng — nơi mỗi khoảnh khắc đều trở nên đáng nhớ</p>
-          <a href="#rooms" className="px-8 py-3 rounded-xl font-semibold text-primary-600 bg-white hover:bg-primary-50 transition-colors shadow-lg">
+          <p className="text-white/80 text-lg mb-8 max-w-xl">Trải nghiệm lưu trú sang trọng — nơi mỗi khoảnh khắc đều trở nên đáng nhớ</p>
+          <a href="#rooms" className="px-8 py-3 rounded-xl font-semibold text-gray-900 bg-white hover:bg-gray-100 transition-colors shadow-lg">
             Khám phá phòng
           </a>
         </div>
@@ -214,7 +224,7 @@ export default function HomePage() {
             {displayServices.map((s, i) => (
               <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group hover:shadow-md transition-shadow cursor-pointer">
                 <div className="h-36 overflow-hidden bg-gray-100">
-                  <img src={s.img || s.image} alt={s.name}
+                  <img src={s.imageUrl || s.img || s.image} alt={s.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     onError={e => { e.target.style.display = 'none'; }} />
                 </div>

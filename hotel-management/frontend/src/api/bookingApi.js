@@ -5,7 +5,7 @@ const bookingApi = {
   getCurrentBookings: () => axiosClient.get('/bookings/current'),
   createBooking: (data) => axiosClient.post('/bookings', data),
   updateBooking: (id, data) => axiosClient.put(`/bookings/${id}`, data),
-  updateBookingStatus: (id, status) => axiosClient.patch(`/bookings/${id}/status/${status}`),
+  updateBookingStatus: (id, status) => axiosClient.put(`/bookings/${id}/status`, { status }),
   deleteBooking: (id) => axiosClient.delete(`/bookings/${id}`),
 };
 export default bookingApi;

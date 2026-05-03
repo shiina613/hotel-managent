@@ -1,6 +1,8 @@
 package com.hotel.management.repository;
 
 import com.hotel.management.entity.HotelService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -36,6 +38,15 @@ public interface ServiceRepository extends JpaRepository<HotelService, Integer> 
     List<HotelService> filterServices(@Param("active") Boolean active,
                                       @Param("unit") String unit,
                                       @Param("keyword") String keyword);
+
+    @Query("SELECT s FROM HotelService s WHERE " +
+           "(:active IS NULL OR s.isActive = :active) AND " +
+           "(:unit IS NULL OR s.unit = :unit) AND " +
+           "(:keyword IS NULL OR s.name LIKE %:keyword%)")
+    Page<HotelService> filterServices(@Param("active") Boolean active,
+                                      @Param("unit") String unit,
+                                      @Param("keyword") String keyword,
+                                      Pageable pageable);
 
     @Query("SELECT s FROM HotelService s ORDER BY s.createAt DESC")
     List<HotelService> findAllOrderByCreateAtDesc();

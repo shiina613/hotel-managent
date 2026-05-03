@@ -1,6 +1,7 @@
 package com.hotel.management.service.impl;
 
 import com.hotel.management.dto.InvoiceDTO;
+import com.hotel.management.dto.response.PageResponse;
 import com.hotel.management.entity.Booking;
 import com.hotel.management.entity.Invoice;
 import com.hotel.management.enums.InvoiceStatus;
@@ -9,6 +10,7 @@ import com.hotel.management.repository.BookingRepository;
 import com.hotel.management.repository.InvoiceRepository;
 import com.hotel.management.service.InvoiceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -140,6 +142,22 @@ public class InvoiceServiceImpl implements InvoiceService {
         return invoiceRepository.filterInvoices(userId, bookingId, status, payMethod, startDate, endDate).stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<InvoiceDTO> getAllInvoices(Pageable pageable) {
+        return PageResponse.from(invoiceRepository.findAll(pageable).map(this::mapToDTO));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<InvoiceDTO> filterInvoices(Integer userId, Integer bookingId, InvoiceStatus status,
+                                                   PaymentMethod payMethod, LocalDateTime startDate, LocalDateTime endDate,
+                                                   Pageable pageable) {
+        return PageResponse.from(
+                invoiceRepository.filterInvoices(userId, bookingId, status, payMethod, startDate, endDate, pageable)
+                        .map(this::mapToDTO));
     }
 
     @Override
