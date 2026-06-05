@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import bookingApi from '../../api/bookingApi';
 import roomApi from '../../api/roomApi';
+import invoiceApi from '../../api/invoiceApi';
 import authApi from '../../api/authApi';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
@@ -54,25 +55,42 @@ function timeUntil(dateStr) {
 
 // Modal check-out: xác nhận thanh toán và tạo invoice
 function CheckOutModal({ booking, onClose, onSuccess }) {
+  const [payMethod, setPayMethod] = useState('CASH');
   const [saving, setSaving] = useState(false);
+
+  const PAY_OPTIONS = [
+    { value: 'CASH',     label: 'Tiền mặt',      icon: '💵' },
+    { value: 'CARD',     label: 'Thẻ ngân hàng',  icon: '💳' },
+    { value: 'TRANSFER', label: 'Chuyển khoản',   icon: '🏦' },
+  ];
 
   const handleCheckOut = async () => {
     setSaving(true);
     try {
-      // Gọi PUT /bookings/{id}/status với CHECKED_OUT
-      // Backend tự động tạo Invoice (idempotent) khi chuyển sang CHECKED_OUT
+      // 1. Chuyển trạng thái → CHECKED_OUT (backend tự tạo invoice UNPAID)
       await bookingApi.updateBookingStatus(booking.id, 'CHECKED_OUT');
-      toast.success('Check-out thành công! Hóa đơn đã được tạo.');
+
+      // 2. Lấy invoice vừa tạo theo bookingId
+      const invRes = await invoiceApi.getInvoices({ bookingId: booking.id, size: 1 });
+      const invData = invRes?.data;
+      const invList = invData?.content ?? (Array.isArray(invData) ? invData : []);
+      const invoice = invList[0];
+
+      // 3. Đánh dấu đã thanh toán với phương thức đã chọn
+      if (invoice?.id) {
+        await invoiceApi.markAsPaid(invoice.id, payMethod);
+      }
+
+      toast.success(`Check-out thành công! Thanh toán bằng ${PAY_OPTIONS.find(p => p.value === payMethod)?.label}.`);
       onSuccess();
     } catch (e) {
-      toast.error((e && typeof e === 'object' && e.message) ? e.message : (typeof e === 'string' ? e : 'Check-out thất bại'));
+      toast.error((e && typeof e === 'object' && e.message) ? e.message : 'Check-out thất bại');
     } finally { setSaving(false); }
   };
 
   return (
     <Modal open onClose={onClose} title={`Check-out — Phòng ${booking.roomNumber}`} size="md">
       <div className="space-y-4">
-        {/* Tóm tắt booking */}
         <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
           <div className="flex justify-between text-gray-600">
             <span>Khách hàng</span>
@@ -96,17 +114,36 @@ function CheckOutModal({ booking, onClose, onSuccess }) {
           </div>
         </div>
 
-        {/* Phương thức thanh toán sẽ được cập nhật khi thanh toán hóa đơn */}
-        <p className="text-sm text-gray-500 bg-blue-50 border border-blue-100 rounded-lg px-4 py-3">
-          Hóa đơn sẽ được tạo tự động. Phương thức thanh toán có thể cập nhật trong mục Hóa đơn.
-        </p>
+        <div>
+          <p className="text-sm font-medium text-gray-700 mb-2">Phương thức thanh toán</p>
+          <div className="grid grid-cols-3 gap-2">
+            {PAY_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setPayMethod(opt.value)}
+                className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 text-sm font-medium transition-colors
+                  ${payMethod === opt.value
+                    ? 'border-primary-500 bg-primary-50 text-primary-600'
+                    : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'}`}
+              >
+                <span className="text-xl">{opt.icon}</span>
+                <span>{opt.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-green-50 border border-green-100 rounded-lg px-4 py-3 text-sm text-green-700">
+          Hóa đơn sẽ được tạo và đánh dấu <strong>đã thanh toán</strong> ngay sau khi xác nhận.
+        </div>
       </div>
 
       <div className="flex gap-3 mt-6">
         <button onClick={onClose} className="btn-ghost flex-1">Hủy</button>
         <button onClick={handleCheckOut} disabled={saving}
           className="flex-1 py-2.5 bg-primary-500 text-white rounded-xl font-semibold hover:bg-primary-600 disabled:opacity-50 transition-colors">
-          {saving ? 'Đang xử lý...' : `Xác nhận check-out ${fmt(booking.totalPrice)}`}
+          {saving ? 'Đang xử lý...' : `Xác nhận thanh toán ${fmt(booking.totalPrice)}`}
         </button>
       </div>
     </Modal>
